@@ -1,14 +1,13 @@
-function [ spc ] = lazyEnviRead( datafile,hdr_info,sample,line )
-% [ spc ] = lazyEnviRead( datafile,info,sample,line )
-% read one spectrum at specified location [sample, line]
+function [ iml ] = lazyEnviReadl( datafile,hdr_info,line)
+% [ iml ] = lazyEnviReadl( datafile,info,line )
+% read one line of hyperspectral data.
 %   Inputs:
 %       datafile: file path to the image file
 %       hdr_info: info object returned by envihdrread(hdrfile)
-%       sample: coordinate in the cross-track direction, integer
-%       line: coordinate in the along-track direction
+%       line: line to be read
 %   Outputs:
-%       spc: spectral signature at [sample, line], numerical array with
-%       the size bands x 1. 
+%       iml: the line image of the hyperspectral data at bth band 
+%                [bands x samples]
 
 interleave = hdr_info.interleave;
 samples = hdr_info.samples;
@@ -45,29 +44,33 @@ switch hdr_info.byte_order
         machine = 'n';
 end
 
+
 fid = fopen(datafile);
 
-if strcmp(interleave,'bil')
-    spc = zeros(bands,1);
-    offset = s*(samples*(line-1)*bands+(sample-1));
-    skip = s*(samples-1);
+iml = zeros([bands,samples],typeName);
+if strcmp(interleave,'bil') % BIL type: sample -> band -> line
+    offset = s*(samples*bands*(line-1))+header_offset;
     fseek(fid, offset, -1);
-    for b = 1:bands
-        spctmp = fread(fid,1,typeName,skip,machine);
-        spc(b) = spctmp;
+    iml = fread(fid,samples*bands,typeName,0,machine);
+    iml = reshape(iml,[samples,bands])';
+    if data_type==12
+        iml = uint16(iml);
+    elseif data_type==2
+        iml = int16(iml);
     end
-elseif strcmp(interleave,'bsq')
-    spc = zeros(bands,1);
-    skip = s*(lines*samples-1);
-    offset = s*(sample-1)+s*(line-1)*samples;
+elseif strcmp(interleave,'bsq') % sample -> line -> band
+    offset = s*(samples*(line-1));
+    skips = s*samples*(line-1);
     fseek(fid, offset, -1);
-    for b = 1:bands
-        spctmp = fread(fid,1,typeName,skip,machine);
-        spc(b) = spctmp;
+    for b=1:bands
+        iml(b,:) = fread(fid,samples,typeName,0,machine);
+        fseek(fid,skips,0);
     end
 end
 
 fclose(fid);
 
 end
+    
+
 
