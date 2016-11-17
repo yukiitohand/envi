@@ -30,6 +30,15 @@ elseif data_type==5
     typeName = 'double';
 end
 
+switch hdr_info.byte_order
+    case {0}
+        machine = 'ieee-le';
+    case {1}
+        machine = 'ieee-be';
+    otherwise
+        machine = 'n';
+end
+
 nsample_idxes = length(sample_idxes);
 nline_idxes = length(line_idxes);
 nband_idxes = length(band_idxes);
@@ -44,7 +53,7 @@ if strcmp(interleave,'bil') % BIL type: sample -> band -> line
     fseek(fid, offset, -1);
     for l=1:nline_idxes
         for b=1:bands
-            hsi_sub(l,:,b) = fread(fid,nsample_idxes,typeName,0);
+            hsi_sub(l,:,b) = fread(fid,nsample_idxes,typeName,0,machine);
             fseek(fid,skip_samples,0);
         end
     end
@@ -56,7 +65,7 @@ elseif strcmp(interleave,'bsq') % sample -> line -> band
     fseek(fid, offset, -1);
     for b = 1:bands
         for l=1:nline_idxes
-            hsi_sub(l,:,b) = fread(fid,nsample_idxes,typeName);
+            hsi_sub(l,:,b) = fread(fid,nsample_idxes,typeName,0,machine);
             fseek(fid,skip_samples,0);
         end
         fseek(fid, skip_ls, 0);

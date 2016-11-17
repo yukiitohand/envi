@@ -1,12 +1,12 @@
-function envihdrwrite_yuki(info,hdrfile)
+function envihdrwrite_yuki(hdr_info,hdrfile)
 % ENVIHDRWRITE read and return ENVI image file header information.
 %   INFO = ENVIHDRWRITE(info,'HDR_FILE') writes the ENVI header file
 %   'HDR_FILE'. Parameter values are provided by the fields of structure
 %   info.
 %
 %   Example:
-%   >> info = envihdrread('my_envi_image.hdr')
-%   info =
+%   >> hdr_info = envihdrread('my_envi_image.hdr')
+%   hdr_info =
 %          description: [1x101 char]
 %              samples: 658
 %                lines: 749
@@ -22,11 +22,11 @@ function envihdrwrite_yuki(info,hdrfile)
 %     wavelength_units: 'Unknown'
 %           pixel_size: [1x1 struct]
 %           band_names: [1x154 char]
-%     info = enviwrite('my_envi_image2.hdr');
+%     hdr_info = enviwrite('my_envi_image2.hdr');
 %
 % Felix Totir
 
-params=fieldnames(info);
+params=fieldnames(hdr_info);
 
 fid = fopen(hdrfile,'w');
 fprintf(fid,'%s\n','ENVI');
@@ -40,7 +40,7 @@ activeFieldList = {'description','samples','lines','bands','header offset',...
 
 for idx=1:length(params)
     param = params{idx};
-    value = getfield(info,param);
+    value = getfield(hdr_info,param);
     param(findstr(param,'_')) = ' '; %automatic name
     
     if strcmp(param,'wavelength')

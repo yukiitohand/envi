@@ -1,9 +1,10 @@
-function [ flg ] = lazyEnviWriteb( dataFilePath, imgb,hdr_info,band,mode)
-% [ spc ] = lazyEnviReadb( datafile,info,band )
+function [ flg ] = lazyEnviWritel( dataFilePath,imgl,hdr_info,l,mode)
+% [ flg ] = lazyEnviReadl( datafile,imgl,info,band )
 % read a band image of hyperspectral data.
 %   Inputs:
 %       dataFilePath: file path to the image file
 %       hdr_info: info object returned by envihdrread(hdrfile)
+%       imgl: [bands x samples] one line image
 %       band: band to be read
 %       mode: {'a','m'} 'a' append the data and 'm': modify the data
 %             currently only 'a' is supported
@@ -50,7 +51,7 @@ switch hdr_info.byte_order
 end
 
 % open new file to write to a file
-imgb1d = reshape(imgb',[1 hdr_info.samples*hdr_info.lines]);
+imgb1d = reshape(imgl',[1 hdr_info.samples*hdr_info.bands]);
 if strcmp(mode,'a')
     write_file_id = fopen(dataFilePath, 'a');
     fwrite(write_file_id, imgb1d, write_format, 0, write_machine);
@@ -60,4 +61,3 @@ elseif strcmp(mode,'m')
 end
 fclose(write_file_id);
 end
-

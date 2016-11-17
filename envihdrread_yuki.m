@@ -41,6 +41,9 @@ while true
             if isempty(regexp(line,cmout))
                 param = strtrim(line(1:eqsn-1));
                 param(findstr(param,' ')) = '_';
+                param(findstr(param,'(')) = '';
+                param(findstr(param,')')) = '';
+                param(findstr(param,'/')) = '';
                 value = strtrim(line(eqsn+1:end));
                 if isempty(str2num(value))
                     if ~isempty(findstr(value,'{')) && isempty(findstr(value,'}'))
@@ -52,7 +55,7 @@ while true
                     info.(param)=value;
     %                 eval(['info.',param,' = ''',value,''';'])
                 else
-                    eval(['info.',param,' = ',value,';'])
+                    info.(param) = str2num(value);
                 end
             end
         end
@@ -60,6 +63,15 @@ while true
 end
 fclose(fid);
 
+if isfield(info,'band_names')
+    line = info.band_names;
+    line = line(2:end-1);
+    line = strsplit(line,',');
+    for i=1:length(line)
+        line{i} = strtrim(line{i});
+    end
+    info.band_names = line;
+end
 if isfield(info,'map_info')
     line = info.map_info;
     line(line == '{' | line == '}') = [];

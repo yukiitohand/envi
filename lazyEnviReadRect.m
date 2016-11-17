@@ -1,10 +1,10 @@
-function [ hsi_sub ] = lazyEnviReadRect( datafile,info,upperLeft,lowerRight,band_idxes)
+function [ hsi_sub ] = lazyEnviReadRect( datafile,hdr_info,upperLeft,lowerRight,band_idxes)
 % [ spc ] = lazyEnviReadRect( datafile,info,upperLeft,LowerRight,bands )
 % read a subset of hyperspectral data. The spatial subset is defined by the
 % samples and the lines and the spectral subset is defined by the bands. 
 %   Inputs:
 %       datafile: file path to the image file
-%       info: info object returned by envihdrread(hdrfile)
+%       hdr_info: info object returned by envihdrread(hdrfile)
 %       upperLeft: the coordinate of the vertex at the upper Left of the
 %                  rectangle [y_ul,x_ul] 
 %                  (Note: y_ul<y_lr and x_ul<x_lr are required)
@@ -26,12 +26,12 @@ y_ul = upperLeft(1); x_ul = upperLeft(2);
 y_lr = lowerRight(1); x_lr = lowerRight(2);
 % [y_ul,x_ul] = reshape(upperLeft,[1,2]); [y_lr,x_lr] = reshape(lowerRight,[1,2]);
 
-interleave = info.interleave;
-samples = info.samples;
-lines = info.lines;
-header_offset = info.header_offset;
-bands = info.bands;
-data_type = info.data_type;
+interleave = hdr_info.interleave;
+samples = hdr_info.samples;
+lines = hdr_info.lines;
+header_offset = hdr_info.header_offset;
+bands = hdr_info.bands;
+data_type = hdr_info.data_type;
 if data_type==12
     % unsigned int16
     s=2;
@@ -42,8 +42,11 @@ elseif data_type==4
 elseif data_type==5
     s=8;
     typeName = 'double';
-else 
-    error('Sorry the specified type is not supproted\n');
+elseif data_type==1
+    s=1;
+    typeName = 'uint8';
+else
+    error('Undefined data_type "%d".',data_type);
 end
 
 if y_ul>y_lr
@@ -72,6 +75,15 @@ if any(band_idxes>bands) || any(band_idxes<1)
     error(' "band_idxes" is invalid\n');
 end
 
+switch hdr_info.byte_order
+    case {0}
+        machine = 'ieee-le';
+    case {1}
+        machine = 'ieee-be';
+    otherwise
+        machine = 'n';
+end
+
 
 nRectx = x_lr-x_ul+1;
 nRecty = y_lr-y_ul+1;
@@ -87,7 +99,7 @@ if strcmp(interleave,'bil') % BIL type: sample -> band -> line
     fseek(fid, offset, -1);
     for l=1:nRecty
         for b=1:bands
-            hsi_sub(l,:,b) = fread(fid,nRectx,typeName,0);
+            hsi_sub(l,:,b) = fread(fid,nRectx,typeName,0,machine);
             fseek(fid,skip_samples,0);
         end
     end
@@ -99,7 +111,7 @@ elseif strcmp(interleave,'bsq') % sample -> line -> band
     fseek(fid, offset, -1);
     for b = 1:bands
         for l=1:nRecty
-            hsi_sub(l,:,b) = fread(fid,nRectx,typeName);
+            hsi_sub(l,:,b) = fread(fid,nRectx,typeName,0,machine);
             fseek(fid,skip_samples,0);
         end
         fseek(fid, skip_ls, 0);
