@@ -4,7 +4,7 @@ function [ flg ] = lazyEnviWriteb( dataFilePath, imgb,hdr_info,band,mode)
 %   Inputs:
 %       dataFilePath: file path to the image file
 %       hdr_info: info object returned by envihdrread(hdrfile)
-%       band: band to be read
+%       band: band to be written
 %       mode: {'a','m'} 'a' append the data and 'm': modify the data
 %             currently only 'a' is supported
 %   Outputs:

@@ -1,11 +1,11 @@
 function [ flg ] = lazyEnviWritel( dataFilePath,imgl,hdr_info,l,mode)
-% [ flg ] = lazyEnviReadl( datafile,imgl,info,band )
+% [ flg ] = lazyEnviReadl( datafile,imgl,info,l )
 % read a band image of hyperspectral data.
 %   Inputs:
 %       dataFilePath: file path to the image file
 %       hdr_info: info object returned by envihdrread(hdrfile)
 %       imgl: [bands x samples] one line image
-%       band: band to be read
+%       l: lines to be written
 %       mode: {'a','m'} 'a' append the data and 'm': modify the data
 %             currently only 'a' is supported
 %   Outputs:
