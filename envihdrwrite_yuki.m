@@ -58,6 +58,18 @@ for idx=1:length(params)
         line=[param,' = ',val_str];
     elseif any(strcmpi(param,activeFieldList))
         line=[param,' = ',num2str(value)];
+    else
+        if isnumeric(value) && ~isscalar(value)
+            if all(value==floor(value))
+                val_str = sprintf('%d,',value);
+            else
+                val_str = sprintf('%f,',value);
+            end
+            val_str = ['{' val_str(1:end-1) '}'];
+            line=[';' param,' = ',val_str];
+        else
+            line=[';' param,' = ',num2str(value)];
+        end
     end
     % the cases are created by Yuki Jan. 12, 2015 for customized
     % envihdrread_yuki.m

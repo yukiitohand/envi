@@ -36,27 +36,28 @@ while true
     if line == -1
         break
     else
+        if ~isempty(regexp(line,cmout))
+            line = line(2:end);
+        end
         eqsn = findstr(line,'=');
         if ~isempty(eqsn)
-            if isempty(regexp(line,cmout))
-                param = strtrim(line(1:eqsn-1));
-                param(findstr(param,' ')) = '_';
-                param(findstr(param,'(')) = '';
-                param(findstr(param,')')) = '';
-                param(findstr(param,'/')) = '';
-                value = strtrim(line(eqsn+1:end));
-                if isempty(str2num(value))
-                    if ~isempty(findstr(value,'{')) && isempty(findstr(value,'}'))
-                        while isempty(findstr(value,'}'))
-                            line = fgetl(fid);
-                            value = [value,strtrim(line)];
-                        end
+            param = strtrim(line(1:eqsn-1));
+            param(findstr(param,' ')) = '_';
+            param(findstr(param,'(')) = '';
+            param(findstr(param,')')) = '';
+            param(findstr(param,'/')) = '';
+            value = strtrim(line(eqsn+1:end));
+            if isempty(str2num(value))
+                if ~isempty(findstr(value,'{')) && isempty(findstr(value,'}'))
+                    while isempty(findstr(value,'}'))
+                        line = fgetl(fid);
+                        value = [value,strtrim(line)];
                     end
-                    info.(param)=value;
-    %                 eval(['info.',param,' = ''',value,''';'])
-                else
-                    info.(param) = str2num(value);
                 end
+                info.(param)=value;
+%                 eval(['info.',param,' = ''',value,''';'])
+            else
+                info.(param) = str2num(value);
             end
         end
     end
