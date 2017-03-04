@@ -24,6 +24,7 @@
 #include "mex.h"
 #include "matrix.h"
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 
 /* The computational routine */
@@ -148,7 +149,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
         mexErrMsgIdAndTxt("lazyEnviReadcMex:data_type","float type is required.");
     }
     
-    imc = mxGetPr(plhs[0]);
+    imc = mxGetData(plhs[0]);
     
     if(data_type==4)
     {

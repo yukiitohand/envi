@@ -18,10 +18,22 @@ data_type = hdr_info.data_type;
 byte_order = hdr_info.byte_order;
 
 if  ( (data_type==4) && strcmp(interleave,'bil') ) && (byte_order==0)
-    imsamp = lazyEnviReadcMex04Float(datafile, samples, lines, bands, header_offset, data_type, interleave, byte_order, sample);
+    if ispc
+        imsamp = lazyEnviReadcMex04Float(datafile, samples, lines, bands, header_offset, data_type, interleave, byte_order, sample);
+    elseif ismac
+        imsamp = lazyEnviReadcMex04Float_mac(datafile, samples, lines, bands, header_offset, data_type, interleave, byte_order, sample);
+    elseif unix
+        error('Please compile the mex file');
+    end
     imsamp = imsamp';
 elseif (data_type==12) && strcmp(interleave,'bil')
-    imsamp = lazyEnviReadcMex12Uint16(datafile, samples, lines, bands, header_offset, data_type, interleave, byte_order, sample);
+    if ispc
+        imsamp = lazyEnviReadcMex12Uint16(datafile, samples, lines, bands, header_offset, data_type, interleave, byte_order, sample);
+    elseif ismac
+        imsamp = lazyEnviReadcMex12Uint16_mac(datafile, samples, lines, bands, header_offset, data_type, interleave, byte_order, sample);
+    elseif unix
+        error('Please compile the mex file');
+    end
     imsamp = imsamp';
 else
 

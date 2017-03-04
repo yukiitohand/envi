@@ -73,7 +73,7 @@ void readimageUint16(char* fpath, int samples, int lines, int bands, int header_
                 }
                 // memcpy is faster??
                 memcpy(im+b+l*bands,buf,s);
-                _fseeki64(fp,skips,SEEK_CUR);
+                fseek(fp,skips,SEEK_CUR);
         }
     }
     else {

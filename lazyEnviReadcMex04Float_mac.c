@@ -9,7 +9,7 @@
  * header_offset: integer
  * data_type: integer
  * interleave: string
- * byte_order
+ * byte_ordre: integer
  * c: column to be read,integer
  *
  * 
@@ -28,25 +28,24 @@
 #include <stdlib.h>
 
 /* The computational routine */
-void readimageUint16(char* fpath, int samples, int lines, int bands, int header_offset, char* interleave, int byte_order, int c, int s, unsigned short* im)
+void readimageFloat(char* fpath, int samples, int lines, int bands, int header_offset, char* interleave, int byte_order, int c, int s, float* im)
 {
-    unsigned short* buf;
+    float* buf;
     mwSize offset;
     mwSize skips;
     mwSize l;
     mwSize b;
     mwSize sz;
-    unsigned short tmp1;
-    unsigned short tmp2;
     FILE *fp;
     
-    if(byte_order==2){
+    if(byte_order==1){
         mexErrMsgIdAndTxt( "MATLAB:lazyEnviRead:byte_order",
                 "Unsupported byte_order.");
     }
     
-    buf = (unsigned short *)malloc(s);
+    buf = (float *)malloc(s);
     fp = fopen(fpath,"rb");
+    
     fseek(fp, 0, SEEK_END);
     sz = ftell(fp);
     if (sz < samples*s*lines*bands){
@@ -54,7 +53,6 @@ void readimageUint16(char* fpath, int samples, int lines, int bands, int header_
                 "Some input data seems wrong.");
     }
     fseek(fp, 0, SEEK_SET); 
-    
     
     if (~strcmp(interleave,"bil")) {
         // BIL type: sample -> band -> line
@@ -65,15 +63,9 @@ void readimageUint16(char* fpath, int samples, int lines, int bands, int header_
             for (b=0; b<bands; b++)
             {   
                 fread(buf,s,1,fp);
-                if(byte_order==1)
-                {
-                    tmp1 = *buf / 256;
-                    tmp2 = *buf % 256;
-                    *buf = tmp2*256+tmp1;
-                }
                 // memcpy is faster??
                 memcpy(im+b+l*bands,buf,s);
-                _fseeki64(fp,skips,SEEK_CUR);
+                fseek(fp,skips,SEEK_CUR);
         }
     }
     else {
@@ -101,14 +93,13 @@ void mexFunction(int nlhs, mxArray *plhs[],
     mwSize c;
     mwSize N;
     mwSize s;
-    unsigned short* imc;
+    float* imc;
     
 //     printf("%d\n",nrhs);
     if(nrhs != 9) {
         mexErrMsgIdAndTxt("lazyEnviReadcMex:nrhs","Nine inputs required.");
     }
     
-
 
     /* code here */
     samples = (mwSize)mxGetScalar(prhs[1]);
@@ -134,7 +125,6 @@ void mexFunction(int nlhs, mxArray *plhs[],
     if(c>samples){
          mexErrMsgIdAndTxt("lazyEnviReadcMex:c","Too big.");
     }
-
     
 /* check the variables */
 //     printf("samples: %d\n",samples);
@@ -149,21 +139,21 @@ void mexFunction(int nlhs, mxArray *plhs[],
 
 
 /* read the image file */
-    if(data_type==12)
+    if(data_type==4)
     {
-        plhs[0] = mxCreateNumericMatrix(bands, lines, mxUINT16_CLASS, mxREAL);
-        s = sizeof(unsigned short);
+        plhs[0] = mxCreateNumericMatrix(bands, lines, mxSINGLE_CLASS, mxREAL);
+        s = sizeof(float);
 //         printf("s:%d\n",s);
     }
     else{
-        mexErrMsgIdAndTxt("lazyEnviReadcMex:data_type","uint16 type is required.");
+        mexErrMsgIdAndTxt("lazyEnviReadcMex:data_type","float type is required.");
     }
     
     imc = mxGetData(plhs[0]);
     
-    if(data_type==12)
+    if(data_type==4)
     {
-        readimageUint16(fpath,samples,lines,bands,header_offset,interleave,byte_order,c,s,imc);
+        readimageFloat(fpath,samples,lines,bands,header_offset,interleave,byte_order,c,s,imc);
     }
 
 }
