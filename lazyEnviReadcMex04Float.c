@@ -1,0 +1,162 @@
+/*
+ * lazyEnviReadcMex04Float.c
+ * Read a specified column of hyperspectral image data with Float type.
+ * Input: 
+ * fpath: (string) path to the image file
+ * samples: integer
+ * lines: integer
+ * bands: integer
+ * header_offset: integer
+ * data_type: integer
+ * interleave: string
+ * byte_ordre: integer
+ * c: column to be read,integer
+ *
+ * 
+ * Output:
+ * imc: (image x Line) Matrix of the band of the image in double format
+ * The calling syntax is:
+ *
+ *		imc = lazeEnviReadcMex(fpath,samples,lines,bands,header_offset,data_type,interleave,byte_order,c)
+ *
+ * This is a MEX file for MATLAB.
+*/
+#include "mex.h"
+#include "matrix.h"
+#include <stdio.h>
+#include <stdlib.h>
+
+/* The computational routine */
+void readimageFloat(char* fpath, int samples, int lines, int bands, int header_offset, char* interleave, int byte_order, int c, int s, float* im)
+{
+    float* buf;
+    mwSize offset;
+    mwSize skips;
+    mwSize l;
+    mwSize b;
+    mwSize sz;
+    FILE *fp;
+    
+    if(byte_order==1){
+        mexErrMsgIdAndTxt( "MATLAB:lazyEnviRead:byte_order",
+                "Unsupported byte_order.");
+    }
+    
+    buf = (float *)malloc(s);
+    fp = fopen(fpath,"rb");
+    
+    fseek(fp, 0, SEEK_END);
+    sz = ftell(fp);
+    if (sz < samples*s*lines*bands){
+        mexErrMsgIdAndTxt( "MATLAB:lazyEnviRead:Input",
+                "Some input data seems wrong.");
+    }
+    fseek(fp, 0, SEEK_SET); 
+    
+    if (~strcmp(interleave,"bil")) {
+        // BIL type: sample -> band -> line
+        offset = s*(c-1) + header_offset;
+        skips = s*(samples-1);
+        fseek(fp, offset, SEEK_SET);
+        for (l=0; l<lines; l++) 
+            for (b=0; b<bands; b++)
+            {   
+                fread(buf,s,1,fp);
+                // memcpy is faster??
+                memcpy(im+b+l*bands,buf,s);
+                _fseeki64(fp,skips,SEEK_CUR);
+        }
+    }
+    else {
+            mexErrMsgIdAndTxt( "MATLAB:lazyEnviRead:interleave",
+                "Unsupported interleave.");
+    }
+    fclose(fp);
+    free(buf);
+}
+
+
+/* The gateway function */
+void mexFunction(int nlhs, mxArray *plhs[],
+                 int nrhs, const mxArray *prhs[])
+{
+    /* variable declarations here */
+    char fpath[500];
+    mwSize samples;
+    mwSize lines;
+    mwSize bands;
+    mwSize header_offset;
+    mwSize data_type;
+    char interleave[5];
+    mwSize byte_order;
+    mwSize c;
+    mwSize N;
+    mwSize s;
+    float* imc;
+    
+//     printf("%d\n",nrhs);
+    if(nrhs != 9) {
+        mexErrMsgIdAndTxt("lazyEnviReadcMex:nrhs","Nine inputs required.");
+    }
+    
+
+    /* code here */
+    samples = (mwSize)mxGetScalar(prhs[1]);
+    lines = (mwSize)mxGetScalar(prhs[2]);
+    bands = (mwSize)mxGetScalar(prhs[3]);
+    header_offset = (mwSize)mxGetScalar(prhs[4]);
+    data_type = (mwSize)mxGetScalar(prhs[5]);
+    byte_order = (mwSize)mxGetScalar(prhs[7]);
+    c = (mwSize)mxGetScalar(prhs[8]);
+    
+    N = (mwSize)mxGetN(prhs[0]);
+    if(N+1>500){
+        mexErrMsgIdAndTxt("lazyEnviReadcMex:fpath","Too long.");
+    }
+    mxGetString(prhs[0],fpath,N+1);
+    
+    N = (mwSize)mxGetN(prhs[6]);
+    if(N+1>5){
+        mexErrMsgIdAndTxt("lazyEnviReadcMex:fpath","Too long.");
+    }
+    mxGetString(prhs[6],interleave,N+1);
+    
+    if(c>samples){
+         mexErrMsgIdAndTxt("lazyEnviReadcMex:c","Too big.");
+    }
+    
+/* check the variables */
+//     printf("samples: %d\n",samples);
+//     printf("lines: %d\n",lines);
+//     printf("bands: %d\n",bands);
+//     printf("header_offset: %d\n",header_offset);
+//     printf("interleave: %s\n",interleave);
+//     printf("data_type: %d\n",data_type);
+//     printf("fpath: %s\n",fpath);
+//     printf("c: %d\n",c);
+
+
+
+/* read the image file */
+    if(data_type==4)
+    {
+        plhs[0] = mxCreateNumericMatrix(bands, lines, mxSINGLE_CLASS, mxREAL);
+        s = sizeof(float);
+//         printf("s:%d\n",s);
+    }
+    else{
+        mexErrMsgIdAndTxt("lazyEnviReadcMex:data_type","float type is required.");
+    }
+    
+    imc = mxGetPr(plhs[0]);
+    
+    if(data_type==4)
+    {
+        readimageFloat(fpath,samples,lines,bands,header_offset,interleave,byte_order,c,s,imc);
+    }
+
+}
+
+    
+
+
