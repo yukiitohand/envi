@@ -73,6 +73,15 @@ if isfield(info,'band_names')
     end
     info.band_names = line;
 end
+if isfield(info,'spectra_names')
+    line = info.spectra_names;
+    line = line(2:end-1);
+    line = strsplit(line,',');
+    for i=1:length(line)
+        line{i} = strtrim(line{i});
+    end
+    info.spectra_names = line;
+end
 if isfield(info,'map_info')
     line = info.map_info;
     line(line == '{' | line == '}') = [];
