@@ -63,5 +63,6 @@ end
 iml = multibandread(datafile, [lines,samples,bands],...
                     precision, header_offset, interleave, byteorder,...
                     {'Row','Direct',l});
+iml = squeeze(iml)';
 
 end
