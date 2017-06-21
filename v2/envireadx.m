@@ -2,7 +2,7 @@ function [ hsi ] = envireadx( imgfile,varargin )
 % [ hsi ] = envireadx( imgfile )
 %   Read an image saved in the default Envi file format
 %    Inputs
-%      imgfile: filepath to the image file
+%      imgfile: filepath to the image file (w/ or w/o a file extension)
 %      hdrfile (optional): filepath to the header file
 %    Outputs
 %      hsi: (struct) having two fields, {'hdr','img'}
@@ -15,9 +15,18 @@ function [ hsi ] = envireadx( imgfile,varargin )
 %     With hdrfile is unspecified, the path will be guessed.
 
 
-if ~exist(imgfile,'file')
-    error('imgfile %s does not exist.',imgfile);
+if exist(imgfile,'file')
+    
+else
+    [pathstr,bname,ext] = fileparts(imgfile);
+    imgfile = findfilei([imgfile '.img'],pathstr);
+    if isempty(imgfile)
+        error('imgfile %s [.img] does not exist.',imgfile);
+    end
 end
+
+% added the upper codes to support the input with no extention 
+% (Yuki Itoh 20170620) 
 
 if length(varargin)==1
     hdrfile = varargin{1};
