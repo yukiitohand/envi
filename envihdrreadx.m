@@ -1,4 +1,4 @@
-function info = envihdrread_yuki(hdrfile)
+function info = envihdrreadx(hdrfile)
 % ENVIHDRREAD Reads header of ENVI image.
 %   INFO = ENVIHDRREAD('HDR_FILE') reads the ASCII ENVI-generated image
 %   header file and returns all the information in a structure of
@@ -29,7 +29,12 @@ function info = envihdrread_yuki(hdrfile)
 % ihowat@apl.washington.edu
 % Version 1: 19-Jul-2007 00:50:57
 % Modified by Felix Totir
-cmout = '^;.*$';
+
+if ~exist(hdrfile,'file')
+    error('File does not exist. Check the file path\n %s',hdrfile);
+end
+
+cmout = '^;.*$'; % added by Yuki for read commented out parameters
 fid = fopen(hdrfile);
 while true
     line = fgetl(fid);
@@ -55,7 +60,14 @@ while true
                     end
                 end
                 info.(param)=value;
+                % edited by Yuki below
 %                 eval(['info.',param,' = ''',value,''';'])
+            elseif strcmp(param,'cat_crism_obsid')
+                % added by Yuki on May 31 2017
+                info.(param) = value;
+            elseif strcmp(param,'cat_sclk_start')
+                % added by Yuki on May 31 2017
+                info.(param) = value;
             else
                 info.(param) = str2num(value);
             end
@@ -149,10 +161,17 @@ if isfield(info,'wavelength')
     info.wavelength = sscanf(info.wavelength(2:end-1),'%f,')';
 end
 
+if isfield(info,'fwhm')
+    info.fwhm = sscanf(info.fwhm(2:end-1),'%f,')';
+end
+
 if isfield(info,'default_bands')
     info.default_bands = sscanf(info.default_bands(2:end-1),'%d,')';
 end
 
+if isfield(info,'bbl')
+    info.bbl = sscanf(info.bbl(2:end-1),'%d,')';
+end
 
 % function split is only used when replacements above do not work
 % function A = split(s,d)

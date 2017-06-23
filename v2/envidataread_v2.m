@@ -6,6 +6,10 @@ function [ img ] = envidataread_v2( datafile,hdr_info)
 %   Outputs:
 %       img: hyperspectral image [lines x samples x bands]
 
+if ~exist(datafile,'file')
+    error('File does not exist. Check the file path\n %s',datafile);
+end
+
 interleave = hdr_info.interleave;
 samples = hdr_info.samples;
 lines = hdr_info.lines;
