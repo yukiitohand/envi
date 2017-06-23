@@ -42,7 +42,7 @@ elseif isempty(varargin)
         if isempty(hdrfile)
             error('No hdr file is found');
         elseif length(hdrfile)==1
-            hdrfile = fullfile(pathstr,hdrfile{1});
+            hdrfile = fullfile(pathstr,hdrfile);
         else
             error('Multiple header files are detected');
         end
@@ -53,7 +53,7 @@ elseif isempty(varargin)
         if isempty(hdrfile)
             error('No hdr file is found');
         elseif length(hdrfile)==1
-            hdrfile = fullfile(pathstr,hdrfile{1});
+            hdrfile = fullfile(pathstr,hdrfile);
         else
             error('Multiple header files are detected');
         end
