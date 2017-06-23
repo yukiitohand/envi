@@ -58,5 +58,9 @@ end
 
 img = multibandread(datafile, [lines,samples,bands],...
                     precision, header_offset, interleave, byteorder);
-                
+
+if isfield(hdr_info,'data_ignore_value')
+    img(img==hdr_info.data_ignore_value) = nan;
+end
+
 end
