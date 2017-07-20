@@ -41,7 +41,9 @@ elseif isempty(varargin)
         hdrfile = findfilei(hdrfile_candidates,pathstr);
         if isempty(hdrfile)
             error('No hdr file is found');
-        elseif length(hdrfile)==1
+        elseif ischar(hdrfile)
+            hdrfile = fullfile(pathstr,hdrfile);
+        elseif iscell(hdrfile) && length(hdrfile)==1
             hdrfile = fullfile(pathstr,hdrfile);
         else
             error('Multiple header files are detected');
@@ -52,7 +54,9 @@ elseif isempty(varargin)
         hdrfile = findfilei(hdrfile_candidates,pathstr);
         if isempty(hdrfile)
             error('No hdr file is found');
-        elseif length(hdrfile)==1
+        elseif ischar(hdrfile)
+            hdrfile = fullfile(pathstr,hdrfile);
+        elseif iscell(hdrfile) && length(hdrfile)==1
             hdrfile = fullfile(pathstr,hdrfile);
         else
             error('Multiple header files are detected');
