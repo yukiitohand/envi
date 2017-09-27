@@ -14,13 +14,15 @@ function [] = split_image(pdir,bname,varargin)
 %    names of the new images are []
 
 lsize = 3000;
+varargin_hdrupdate = {};
 if length(varargin)==1
     lsize = varargin{1};
 elseif length(varargin)>1
-    error('Too many inputs');
+    varargin_hdrupdate = varargin(2:end);
 end
-
-hdr = envihdrread_yuki([pdir bname '.hdr']);
+hdrPath = joinPath(pdir,[bname '.hdr']);
+imgPath = joinPath(pdir,bname);
+hdr = envihdrreadx(hdrPath);
 
 lines = hdr.lines;
 reps = ceil(lines/lsize);
@@ -29,16 +31,22 @@ for r = 1:reps
     l_end = min(lsize*r,lines);
     
     hdrNew = hdrupdate(hdr,'lines',l_end-l_strt+1,'interleave','bil');
-    bnameNew = sprintf('%s_%d',bname,l_strt)
+    if isfield(hdrNew,'FrameIndex')
+        hdrNew.FrameIndex = sprintf('frameIndex_%d.txt',l_strt-1);
+    end
+    hdrNew = hdrupdate(hdrNew,varargin_hdrupdate{:});
+    bnameNew = sprintf('%s_%d',bname,l_strt-1);
     
     % delete if there exists a file with same folder.
-    if exist([pdir bnameNew],'file')
-        prompt = '%s exists. Do you want to proceed?(y/n)';
+    imgNewPath = joinPath(pdir,bnameNew);
+    hdrNewPath = joinPath(pdir,[bnameNew '.hdr']);
+    if exist(imgNewPath,'file')
+        prompt = sprintf('%s exists. Do you want to proceed?(y/n)',imgNewPath);
         flg = 1;
         while flg
             anser = input(prompt,'s');
             if strcmp(lower(anser),'y')
-                delete([pdir bnameNew],[pdir bnameNew '.hdr']); flg=0;
+                delete(imgNewPath,hdrNewPath); flg=0;
             elseif strcmp(lower(anser),'n')
                 return;
             else
@@ -47,10 +55,10 @@ for r = 1:reps
         end
     end
     
-    envihdrwrite_yuki(hdrNew,[pdir bnameNew '.hdr']);
+    envihdrwritex(hdrNew,hdrNewPath);
     for l=1:hdrNew.lines
-        iml = lazyEnviReadl([pdir bname],hdr,l+l_strt-1);
-        a = lazyEnviWritel([pdir bnameNew],iml,hdrNew,l,'a');
+        iml = lazyEnviReadl(imgPath,hdr,l+l_strt-1);
+        a = lazyEnviWritel(imgNewPath,iml,hdrNew,l,'a');
     end
 end
 
