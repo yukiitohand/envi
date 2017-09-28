@@ -102,6 +102,19 @@ for idx=1:length(params)
         end
         val_str = ['{' val_str(1:end-1) '}'];
         line=[param,' = ',val_str];
+    elseif strcmp(param,'spectra names')
+        % this case is added by Yuki Itoh on May 31, 2017
+        val_str = newline;
+        for i=1:length(value)
+            itm_new = value{i};
+            if (length(val_str)+length(itm_new)) > 75
+                val_str = [val_str sprintf('\n %s,',itm_new)];
+            else
+                val_str = [val_str itm_new];
+            end
+        end
+        val_str = ['{' val_str(1:end-1) '}'];
+        line=[param,' = ',val_str];
     elseif strcmp(param,'map info')
         val_str = sprintf('{%s,%d,%d,%2.13f,%2.13f,%1.15e,%1.15e,%s,units=%s}',...
             value.projection,value.image_coords(1),value.image_coords(2),...
