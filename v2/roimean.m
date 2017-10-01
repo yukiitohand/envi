@@ -49,7 +49,7 @@ switch upper(mode)
         roimask_s = roimask(lines_active,colu_active);
         lrange = [lines_active(1),lines_active(end)];
         crange = [colu_active(1),colu_active(end)];
-        brange = 1:hdr.bands;
+        brange = [1,hdr.bands];
         [ img_s ] = lazyEnviReadRect_v2(imgPath,hdr,crange,lrange,brange);
         [L,S,B] = size(img_s);
         roimask_s = logical(roimask_s(:));
