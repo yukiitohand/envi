@@ -30,7 +30,7 @@ end
 imrgb = zeros([lines,samples,3],typeName);
 
 for bidx=1:3
-    imrgb(:,:,bidx) = lazyEnviReadb(datafile,hdr_info,rgb(bidx));
+    imrgb(:,:,bidx) = lazyEnviReadb_v2(datafile,hdr_info,rgb(bidx));
 end
 
 end
