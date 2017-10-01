@@ -19,7 +19,7 @@ function [spc] = roimean(roimask,imgPath,hdr,varargin)
 [L,S] = size(roimask);
 
 if L~=hdr.lines || S~=hdr.samples
-    error('size of the panel mask and the image do not match');
+    error('size of the panel mask and the image does not match');
 end
 
 mode = 'BATCH';
@@ -44,8 +44,18 @@ switch upper(mode)
         img = reshape(img,L*S,hdr.bands)';
         spc = nanmean(img(:,roimask),2);
     case 'SMALLBATCH'
-        error('Not implemented yet');
-        % first convert 2D-boolean mask to coordinates.
+        roimaskl = any(roimask,2); roimaskc = any(roimask,1);
+        lines_active = find(roimaskl); colu_active = find(roimaskc);
+        roimask_s = roimask(lines_active,colu_active);
+        lrange = [lines_active(1),lines_active(end)];
+        crange = [colu_active(1),colu_active(end)];
+        brange = 1:hdr.bands;
+        [ img_s ] = lazyEnviReadRect_v2(imgPath,hdr,crange,lrange,brange);
+        [L,S,B] = size(img_s);
+        roimask_s = logical(roimask_s(:));
+        img_s = reshape(img_s,L*S,B)';
+        spc = nanmean(img_s(:,roimask_s),2);
+        
     otherwise
         error('Unsupported mode');
 end
