@@ -22,14 +22,14 @@ if L~=hdr.lines || S~=hdr.samples
     error('size of the panel mask and the image does not match');
 end
 
-mode = 'BATCH';
+read_mode = 'BATCH';
 if (rem(length(varargin),2)==1)
     error('Optional parameters should always go by pairs');
 else
     for i=1:2:(length(varargin)-1)
         switch upper(varargin{i})
             case 'MODE'
-                mode = varargin{i+1};
+                read_mode = varargin{i+1};
             otherwise
                 % Hmmm, something wrong with the parameter string
                 error(['Unrecognized option: ''' varargin{i} '''']);
@@ -37,7 +37,7 @@ else
     end
 end
 
-switch upper(mode)
+switch upper(read_mode)
     case 'BATCH'
         roimask = logical(roimask(:));
         img = envidataread_v2(imgPath,hdr);

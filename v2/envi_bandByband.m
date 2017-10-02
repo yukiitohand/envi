@@ -1,4 +1,4 @@
-function [hdrNew] = envi_bandByband(hdr,imgPath,imgNewPath,func,hdrcomponents)
+function [hdrNew] = envi_bandByband(hdr,imgPath,imgNewPath,func,varargin)
 % [hdrNew] = envi_bandByband(hdr,imgPath,imgNewPath,func)
 %   perform band by band operation and dump image
 %   Input Parameters
@@ -12,12 +12,22 @@ function [hdrNew] = envi_bandByband(hdr,imgPath,imgNewPath,func,hdrcomponents)
 %            first input is always a band image and the second input is 
 %            always band(scalar). The output of the function is always the
 %            processed image with the same size
+%   Optional parameters
 %      hdrcomponents:
-%            cell, modification to the header file
+%            cell, modification to the header file, need to have an even
+%            number of the elements.
 %   Output
 %      hdrNew: basically, this is the same as hdr except the component
 %              specfied by "hdrcomponents" and 'interleave'
-%      
+%   Usage:
+%      [hdrNew] = envi_bandByband(hdr,imgPath,imgNewPath,func);
+%      [hdrNew] =
+%      envi_bandByband(hdr,imgPath,imgNewPath,func,hdrcomponents);
+
+hdrcomponents = {};
+if ~isempty(varargin)
+    hdrcomponents = varargin{1};
+end 
 
 if exist(imgNewPath,'file')
     prompt = sprintf('%s exists. Do you want to proceed?(y/n)',imgNewPath);
@@ -47,7 +57,7 @@ end
 
 for b=1:hdr.bands
     imb = lazyEnviReadb_v2(imgPath,hdr,b);
-    imb_processed = funcHandle(imb,b,varargin_funcHandle); 
+    imb_processed = funcHandle(imb,b,varargin_funcHandle{:}); 
     a = lazyEnviWriteb(imgNewPath,imb_processed,hdrNew,b,'a');
 end
     

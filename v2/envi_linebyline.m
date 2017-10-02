@@ -1,4 +1,4 @@
-function [hdrNew] = envi_linebyline(hdr,imgPath,imgNewPath,func,hdrcomponents)
+function [hdrNew] = envi_lineByline(hdr,imgPath,imgNewPath,func,varargin)
 % [hdrNew] = envi_lineByline(hdr,imgPath,imgNewPath,func)
 %   perform line by line operation and dump image
 %   Input Parameters
@@ -12,13 +12,23 @@ function [hdrNew] = envi_linebyline(hdr,imgPath,imgNewPath,func,hdrcomponents)
 %            first input is always a line image and the second input is 
 %            always line(scalar). The output of the function is always the
 %            processed image with the same size
+%   Optional parameters
 %      hdrcomponents:
 %            cell, modification to the header file, need to have an even
 %            number of the elements.
 %   Output
 %      hdrNew: basically, this is the same as hdr except the component
 %              specfied by "hdrcomponents" and 'interleave'
-%      
+%
+%   Usage:
+%      [hdrNew] = envi_linebyline(hdr,imgPath,imgNewPath,func);
+%      [hdrNew] =
+%      envi_linebyline(hdr,imgPath,imgNewPath,func,hdrcomponents);
+
+hdrcomponents = {};
+if ~isempty(varargin)
+    hdrcomponents = varargin{1};
+end  
 
 if exist(imgNewPath,'file')
     prompt = sprintf('%s exists. Do you want to proceed?(y/n)',imgNewPath);
@@ -48,7 +58,7 @@ end
 
 for l=1:hdr.lines
     iml = lazyEnviReadl_v2(imgPath,hdr,l);
-    iml_processed = funcHandle(iml,l,varargin_funcHandle); 
+    iml_processed = funcHandle(iml,l,varargin_funcHandle{:}); 
     a = lazyEnviWritel(imgNewPath,iml_processed,hdrNew,l,'a');
 end
     
