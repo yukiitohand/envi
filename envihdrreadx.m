@@ -31,7 +31,14 @@ function info = envihdrreadx(hdrfile)
 % Modified by Felix Totir
 
 if ~exist(hdrfile,'file')
-    error('File does not exist. Check the file path\n %s',hdrfile);
+    [pathstr,bname,ext] = fileparts(hdrfile);
+    hdrfile_candidates = [bname ext];
+    hdrfname = findfilei(hdrfile_candidates,pathstr);
+    if isempty(hdrfname)
+        error('File does not exist. Check the file path\n %s',hdrfile);
+    else
+        hdrfile = joinPath(pathstr,hdrfname);
+    end
 end
 
 cmout = '^;.*$'; % added by Yuki for read commented out parameters

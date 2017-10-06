@@ -19,10 +19,11 @@ if exist(imgfile,'file')
     
 else
     [pathstr,bname,ext] = fileparts(imgfile);
-    imgfile = findfilei([imgfile '.img'],pathstr);
-    if isempty(imgfile)
+    imgfname = findfilei([bname '.img'],pathstr);
+    if isempty(imgfname)
         error('imgfile %s [.img] does not exist.',imgfile);
     end
+    imgfile = joinPath(pathstr,imgfname);
 end
 
 % added the upper codes to support the input with no extention 

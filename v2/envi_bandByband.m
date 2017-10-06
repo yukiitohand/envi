@@ -16,6 +16,7 @@ function [hdrNew] = envi_bandByband(hdr,imgPath,imgNewPath,func,varargin)
 %      hdrcomponents:
 %            cell, modification to the header file, need to have an even
 %            number of the elements.
+%      'f' : means force
 %   Output
 %      hdrNew: basically, this is the same as hdr except the component
 %              specfied by "hdrcomponents" and 'interleave'
@@ -23,23 +24,35 @@ function [hdrNew] = envi_bandByband(hdr,imgPath,imgNewPath,func,varargin)
 %      [hdrNew] = envi_bandByband(hdr,imgPath,imgNewPath,func);
 %      [hdrNew] =
 %      envi_bandByband(hdr,imgPath,imgNewPath,func,hdrcomponents);
+%      [hdrNew] =
+%      envi_bandByband(hdr,imgPath,imgNewPath,func,hdrcomponents,'f');
+%      [hdrNew] =
+%      envi_bandByband(hdr,imgPath,imgNewPath,func,[],'f');
 
 hdrcomponents = {};
+force = '';
 if ~isempty(varargin)
     hdrcomponents = varargin{1};
+    if length(varargin)==2
+        force = varargin{2};
+    end
 end 
 
-if exist(imgNewPath,'file')
-    prompt = sprintf('%s exists. Do you want to proceed?(y/n)',imgNewPath);
-    flg = 1;
-    while flg
-        anser = input(prompt,'s');
-        if strcmpi(anser,'y')
-            delete(imgNewPath,hdrNewPath); flg=0;
-        elseif strcmpi(anser,'n')
-            return;
-        else
-            fprintf('Your input is invalid. Type carefully.\n');
+if strcmpi(force,'f') && exist(imgNewPath,'file')
+    delete(imgNewPath);
+else
+    if exist(imgNewPath,'file')
+        prompt = sprintf('%s exists. Do you want to proceed?(y/n)',imgNewPath);
+        flg = 1;
+        while flg
+            anser = input(prompt,'s');
+            if strcmpi(anser,'y')
+                delete(imgNewPath); flg=0;
+            elseif strcmpi(anser,'n')
+                return;
+            else
+                fprintf('Your input is invalid. Type carefully.\n');
+            end
         end
     end
 end
