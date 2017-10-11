@@ -67,6 +67,7 @@ end
 spc = multibandread(datafile, [lines,samples,bands],...
                     precision, header_offset, interleave, byteorder,...
                     {'Row','Direct',l},{'Column','Direct',s});
+spc = squeeze(spc);
 
 end
     

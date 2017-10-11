@@ -14,12 +14,13 @@ function [ hsi ] = envireadx( imgfile,varargin )
 
 %     With hdrfile is unspecified, the path will be guessed.
 
-
-if exist(imgfile,'file')
-    
-else
+if ~exist(imgfile,'file')
     [pathstr,bname,ext] = fileparts(imgfile);
-    imgfname = findfilei([bname '.img'],pathstr);
+    if isempty(ext)
+        imgfname = findfilei([bname '.img'],pathstr);
+    else
+        imgfname = findfilei(bname,pathstr);
+    end
     if isempty(imgfname)
         error('imgfile %s [.img] does not exist.',imgfile);
     end

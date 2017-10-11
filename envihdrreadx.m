@@ -30,16 +30,17 @@ function info = envihdrreadx(hdrfile)
 % Version 1: 19-Jul-2007 00:50:57
 % Modified by Felix Totir
 
-if ~exist(hdrfile,'file')
-    [pathstr,bname,ext] = fileparts(hdrfile);
-    hdrfile_candidates = [bname ext];
-    hdrfname = findfilei(hdrfile_candidates,pathstr);
-    if isempty(hdrfname)
-        error('File does not exist. Check the file path\n %s',hdrfile);
-    else
-        hdrfile = joinPath(pathstr,hdrfname);
-    end
-end
+% Commented out below. It is case insensitive already 10/10/2017
+% if ~exist(hdrfile,'file')
+%     [pathstr,bname,ext] = fileparts(hdrfile);
+%     hdrfile_candidates = [bname ext];
+%     hdrfname = findfilei(hdrfile_candidates,pathstr);
+%     if isempty(hdrfname)
+%         error('File does not exist. Check the file path\n %s',hdrfile);
+%     else
+%         hdrfile = joinPath(pathstr,hdrfname);
+%     end
+% end
 
 cmout = '^;.*$'; % added by Yuki for read commented out parameters
 fid = fopen(hdrfile);
