@@ -64,6 +64,8 @@ end
 imc = multibandread(datafile, [lines,samples,bands],...
                     precision, header_offset, interleave, byteorder,...
                     {'Column','Direct',c});
+                
+imc = squeeze(imc);
 
 end
     

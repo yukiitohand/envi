@@ -62,6 +62,7 @@ end
 imb = multibandread(datafile, [lines,samples,bands],...
                     precision, header_offset, interleave, byteorder,...
                     {'Band','Direct',b});
+imb = squeeze(imb);
 
 end
     
