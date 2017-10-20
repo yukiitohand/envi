@@ -32,6 +32,12 @@ function [  ] = hsiview_v2( rgb,hsiar,legends )
 %     >> hsiview_v2(rgb,{hsi},{'raw'});
 %   %% when you click any pixel in the image 
 
+if exist('sc','file')~=2
+    error(['Please install a third party module "sc".\n',...
+           'https://www.mathworks.com/matlabcentral/fileexchange/16233-sc-powerful-image-rendering \n',... 
+           'or \n https://github.com/ojwoodford/sc/']);
+end
+
 fig_spc = figure; 
 ax_spc = subplot(1,1,1);
 keepHdl = KeepPlot();
