@@ -60,7 +60,7 @@ if strcmp(interleave,'bil') % BIL type: sample -> band -> line
     end
 elseif strcmp(interleave,'bsq') % sample -> line -> band
     offset = s*(samples*(line-1));
-    skips = s*samples*(line-1);
+    skips = s*samples*(lines-1);
     fseek(fid, offset, -1);
     for b=1:bands
         iml(b,:) = fread(fid,samples,typeName,0,machine);
