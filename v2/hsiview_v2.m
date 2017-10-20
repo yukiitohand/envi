@@ -1,15 +1,36 @@
 function [  ] = hsiview_v2( rgb,hsiar,legends )
-% hyperspectral image viewer
+% hyperspectral image viewer. When you click any pixel in the rgb image, a
+% spectrum of the pixel is displayed in the other figure. There are several
+% add-ons.
+%   "Locate": form dialog will show up and you can enter the pixel
+%             coordinate to get the spectrum of the pixel.
+%   "Keep","Keep Delete"
+%          : once "Keep" is pushed, then the spectra in the Axis is kept
+%          and could be compared with other spectra. "Keep Delete" clear
+%          this.
+%  
+%   You need to have the matlab third party module "sc".
+%     https://www.mathworks.com/matlabcentral/fileexchange/16233-sc-powerful-image-rendering
+%     or
+%     https://github.com/ojwoodford/sc
+%
+%   There will be any bugs, some weird behaviors.
+%   
 %   Inputs
-
-%       
+%     rgb: rgb image, [L x S x 3]
+%     hsiar: cell array of instances of HSI class. For each of the hsi, you
+%     could load image by using the method "readimg" for faster response.
+%     If the image is not loaded, then each spectrum is read each time.
+%     legends: prefix of the legend used for plotting function
 %   Optional Parameters
-
+%     future implementation
 %   Outputs
-
+%     none
 %   Usage
-
-
+%     >> hsi = HSI(base,dpath);
+%     >> rgb = hsi.lazyEnviReadRGB([125 85 49]);
+%     >> hsiview_v2(rgb,{hsi},{'raw'});
+%   %% when you click any pixel in the image 
 
 fig_spc = figure; 
 ax_spc = subplot(1,1,1);
