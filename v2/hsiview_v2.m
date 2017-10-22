@@ -105,7 +105,7 @@ if ~isempty(keepHdl.crd)
             else
                 spc = squeeze(hsiar{i}.img(l,s,:));
             end
-            if isfield(hsiar{i},'wa') && ~isempty(hsiar{i}.wa)
+            if ~isempty(hsiar{i}.wa)
                 plot(ax_spc,hsiar{i}.wa(:,s),spc,'-','DisplayName',[legends{i} ' X: ',num2str(s,4),...
             ' Y: ',num2str(l,4)]);
             else
@@ -129,7 +129,7 @@ for i=1:nhsi
     else
         spc = squeeze(hsiar{i}.img(pos(2),pos(1),:));
     end
-    if isfield(hsiar{i},'wa') && ~isempty(hsiar{i}.wa)
+    if ~isempty(hsiar{i}.wa)
         plot(ax_spc,hsiar{i}.wa(:,pos(1)),spc,'-','DisplayName',[legends{i} ' X: ',num2str(pos(1),4),...
     ' Y: ',num2str(pos(2),4)]);
     else
