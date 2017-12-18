@@ -37,6 +37,7 @@ classdef HSI < handle
         imgPath
         img = [];
         wa = [];
+        BP = [];
     end
     
     methods

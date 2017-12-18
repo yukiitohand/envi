@@ -1,4 +1,4 @@
-function [  ] = hsiview_v2( rgb,hsiar,legends )
+function [  ] = hsiview_v2( rgb,hsiar,legends,varargin )
 % hyperspectral image viewer. When you click any pixel in the rgb image, a
 % spectrum of the pixel is displayed in the other figure. There are several
 % add-ons.
@@ -43,7 +43,7 @@ ax_spc = subplot(1,1,1);
 keepHdl = KeepPlot();
 
 fig_im = figure;
-scx_rgb(rgb);
+scx_rgb(rgb,varargin);
 ax_im = gca;
 ax_im.Position = [0.1 0.1 0.8 0.8];
 axis(ax_im,'on');
@@ -106,8 +106,13 @@ if ~isempty(keepHdl.crd)
                 spc = squeeze(hsiar{i}.img(l,s,:));
             end
             if ~isempty(hsiar{i}.wa)
-                plot(ax_spc,hsiar{i}.wa(:,s),spc,'-','DisplayName',[legends{i} ' X: ',num2str(s,4),...
-            ' Y: ',num2str(l,4)]);
+                l = plot(ax_spc,hsiar{i}.wa(:,s),spc,'-',...
+                        'DisplayName',[legends{i} ' X: ',num2str(s,4),' Y: ',num2str(l,4)]);
+                hold(ax_spc,'on');
+                if ~isempty(hsiar{i}.BP)
+                    plot(ax_spc,hsiar{i}.wa(:,s),spc.*hsiar{i}.BP(:,s),'X',...
+                    'DisplayName',['BP-' legends{i} ' X: ',num2str(pos(1),4),' Y: ',num2str(pos(2),4)]);
+                end
             else
                 plot(ax_spc,hsiar{i}.hdr.wavelength,spc,'-','DisplayName',[legends{i} ' X: ',num2str(s,4),...
             ' Y: ',num2str(l,4)]);
@@ -130,11 +135,16 @@ for i=1:nhsi
         spc = squeeze(hsiar{i}.img(pos(2),pos(1),:));
     end
     if ~isempty(hsiar{i}.wa)
-        plot(ax_spc,hsiar{i}.wa(:,pos(1)),spc,'-','DisplayName',[legends{i} ' X: ',num2str(pos(1),4),...
-    ' Y: ',num2str(pos(2),4)]);
+        plot(ax_spc,hsiar{i}.wa(:,pos(1)),spc,'-',...
+            'DisplayName',[legends{i} ' X: ',num2str(pos(1),4),' Y: ',num2str(pos(2),4)]);
+        hold(ax_spc,'on');
+        if ~isempty(hsiar{i}.BP)
+            plot(ax_spc,hsiar{i}.wa(:,pos(1)),spc.*hsiar{i}.BP(:,pos(1)),'X',...
+                'DisplayName',['BP-' legends{i} ' X: ',num2str(pos(1),4),' Y: ',num2str(pos(2),4)]);
+        end
     else
-        plot(ax_spc,hsiar{i}.hdr.wavelength,spc,'-','DisplayName',[legends{i} ' X: ',num2str(pos(1),4),...
-    ' Y: ',num2str(pos(2),4)]);
+        plot(ax_spc,hsiar{i}.hdr.wavelength,spc,'-',...
+            'DisplayName',[legends{i} ' X: ',num2str(pos(1),4),' Y: ',num2str(pos(2),4)]);
     end
     hold(ax_spc,'on');
     spcminList = [spcminList nanmin(spc)]; spcmaxList = [spcmaxList nanmax(spc)];
