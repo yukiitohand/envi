@@ -38,18 +38,41 @@ if exist('sc','file')~=2
            'or \n https://github.com/ojwoodford/sc/']);
 end
 
+bands = 'all';
+xlim1 = [];
+if (rem(length(varargin),2)==1)
+    error('Optional parameters should always go by pairs');
+else
+    for n=1:2:(length(varargin)-1)
+        switch upper(varargin{n}) 
+            case 'BANDS'
+                bands = varargin{n+1};
+            case 'XLIM'
+                xlim1 = varargin{n+1};
+            otherwise
+                % Hmmm, something wrong with the parameter string
+                error(['Unrecognized option: ''' varargin{n} '''']);
+        end
+    end
+end
+
+if ischar(bands) && strcmp(bands,'all')
+    bands = '';
+end
+
+
 fig_spc = figure; 
 ax_spc = subplot(1,1,1);
 keepHdl = KeepPlot();
 
 fig_im = figure;
-scx_rgb(rgb,varargin);
+scx_rgb(rgb);
 ax_im = gca;
 ax_im.Position = [0.1 0.1 0.8 0.8];
 axis(ax_im,'on');
 set(ax_im,'dataAspectRatio',[1 1 1]);
 hdt = datacursormode(gcf);
-set(hdt,'UpdateFcn',{@map_cursor_crismx,rgb,ax_spc,hsiar,legends,keepHdl});
+set(hdt,'UpdateFcn',{@map_cursor_crismx,rgb,ax_spc,hsiar,legends,keepHdl,xlim1,bands});
 
 imgObj = ax_im.Children;
 
@@ -67,7 +90,7 @@ d = uicontrol(fig_im,'Style','pushbutton','String','Keep Delete',...
 
 end
 
-function output_txt = map_cursor_crismx(obj,event_obj,CData,ax_spc,hsiar,legends,keepHdl)
+function output_txt = map_cursor_crismx(obj,event_obj,CData,ax_spc,hsiar,legends,keepHdl,xlim1,bands)
 % Display the position of the data cursor
 % obj          Currently not used (empty)
 % event_obj    Handle to event object
@@ -102,19 +125,40 @@ if ~isempty(keepHdl.crd)
         for i=1:nhsi
             if isempty(hsiar{i}.img)
                 spc = hsiar{i}.lazyEnviRead(s,l);
+                if ~isempty(bands)
+                    spc = spc(bands);
+                end
             else
                 spc = squeeze(hsiar{i}.img(l,s,:));
+                if ~isempty(bands)
+                    spc = spc(bands);
+                end
             end
             if ~isempty(hsiar{i}.wa)
-                l = plot(ax_spc,hsiar{i}.wa(:,s),spc,'-',...
+                if isempty(bands)
+                    wa = hsiar{i}.wa(:,s);
+                else
+                    wa = hsiar{i}.wa(bands,s);
+                end
+                ln = plot(ax_spc,wa,spc,'-',...
                         'DisplayName',[legends{i} ' X: ',num2str(s,4),' Y: ',num2str(l,4)]);
                 hold(ax_spc,'on');
                 if ~isempty(hsiar{i}.BP)
-                    plot(ax_spc,hsiar{i}.wa(:,s),spc.*hsiar{i}.BP(:,s),'X',...
+                    if isempty(bands)
+                        spcbp = spc.*hsiar{i}.BP(:,s);
+                    else
+                        spcbp = spc.*hsiar{i}.BP(bands,s);
+                    end
+                    plot(ax_spc,wa,spcbp,'X',...
                     'DisplayName',['BP-' legends{i} ' X: ',num2str(pos(1),4),' Y: ',num2str(pos(2),4)]);
                 end
             else
-                plot(ax_spc,hsiar{i}.hdr.wavelength,spc,'-','DisplayName',[legends{i} ' X: ',num2str(s,4),...
+                if isempty(bands)
+                    wv = hsiar{i}.hdr.wavelength;
+                else
+                    wv =hsiar{i}.hdr.wavelength(bands);
+                end
+                plot(ax_spc,wv,spc,'-','DisplayName',[legends{i} ' X: ',num2str(s,4),...
             ' Y: ',num2str(l,4)]);
             end
             hold(ax_spc,'on');
@@ -131,19 +175,40 @@ end
 for i=1:nhsi
     if isempty(hsiar{i}.img)
         spc = hsiar{i}.lazyEnviRead(pos(1),pos(2));
+        if ~isempty(bands)
+            spc = spc(bands);
+        end
     else
         spc = squeeze(hsiar{i}.img(pos(2),pos(1),:));
+        if ~isempty(bands)
+            spc = spc(bands);
+        end
     end
     if ~isempty(hsiar{i}.wa)
-        plot(ax_spc,hsiar{i}.wa(:,pos(1)),spc,'-',...
+        if isempty(bands)
+            wa = hsiar{i}.wa(:,pos(1));
+        else
+            wa = hsiar{i}.wa(bands,pos(1));
+        end
+        plot(ax_spc,wa,spc,'-',...
             'DisplayName',[legends{i} ' X: ',num2str(pos(1),4),' Y: ',num2str(pos(2),4)]);
         hold(ax_spc,'on');
         if ~isempty(hsiar{i}.BP)
-            plot(ax_spc,hsiar{i}.wa(:,pos(1)),spc.*hsiar{i}.BP(:,pos(1)),'X',...
+            if isempty(bands)
+                spcbp = spc.*hsiar{i}.BP(:,pos(1));
+            else
+                spcbp = spc.*hsiar{i}.BP(bands,pos(1));
+            end
+            plot(ax_spc,wa,spcbp,'X',...
                 'DisplayName',['BP-' legends{i} ' X: ',num2str(pos(1),4),' Y: ',num2str(pos(2),4)]);
         end
     else
-        plot(ax_spc,hsiar{i}.hdr.wavelength,spc,'-',...
+        if isempty(bands)
+            wv = hsiar{i}.hdr.wavelength;
+        else
+            wv =hsiar{i}.hdr.wavelength(bands);
+        end
+        plot(ax_spc,wv,spc,'-',...
             'DisplayName',[legends{i} ' X: ',num2str(pos(1),4),' Y: ',num2str(pos(2),4)]);
     end
     hold(ax_spc,'on');
@@ -155,6 +220,9 @@ hold(ax_spc,'off');
 xlabel(ax_spc,'Wavelength');
 ylabel(ax_spc,'Reflectance');
 legend(ax_spc);
+if ~isempty(xlim1)
+    xlim(ax_spc,xlim1);
+end
 ylim(ax_spc,[nanmin(spcminList)*0.9 nanmax(spcmaxList)*1.1]);
 end
 

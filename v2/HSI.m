@@ -2,7 +2,7 @@ classdef HSI < handle
     % Hyperspectral Image class
     %  Constructor Input
     %    basename: string, basename of the image file
-    %    dirPath: string, directory path in which the image file is stored.
+    %    dirpath: string, directory path in which the image file is stored.
     %
     %  #1 note that the header and image are supposed to be in the same
     %    directory.
@@ -15,9 +15,9 @@ classdef HSI < handle
     %  Properties
     %   hdr       : struct of the header information
     %   basename  : string, basename
-    %   dirPath   : string, directory path to the files
-    %   hdrPath   : full file path to the header file
-    %   imgPath   : full file path to the image file
+    %   dirpath   : string, directory path to the files
+    %   hdrpath   : full file path to the header file
+    %   imgpath   : full file path to the image file
     %   img       : (default) []
     %  
     %  Methods: readimg, lazyEnviRead, lazyEnviReadb, lazyEnviReadRGB
@@ -32,32 +32,32 @@ classdef HSI < handle
     properties
         hdr
         basename
-        dirPath
-        hdrPath
-        imgPath
+        dirpath
+        hdrpath
+        imgpath
         img = [];
         wa = [];
         BP = [];
     end
     
     methods
-        function obj = HSI(basename,dirPath)
-            [hdrPath] = guessEnviHDRPATH(basename,dirPath);
-            [imgPath] = guessEnviIMGPATH(basename,dirPath);
+        function obj = HSI(basename,dirpath,varargin)
+            [hdrpath] = guessEnviHDRPATH(basename,dirpath,varargin{:});
+            [imgpath] = guessEnviIMGPATH(basename,dirpath,varargin{:});
             
             obj.basename = basename;
-            obj.dirPath = dirPath;
-            obj.hdrPath = hdrPath;
-            obj.imgPath = imgPath;
+            obj.dirpath = dirpath;
+            obj.hdrpath = hdrpath;
+            obj.imgpath = imgpath;
             
-            if ~isempty(hdrPath)
-                hdr = envihdrreadx(hdrPath);
+            if ~isempty(hdrpath)
+                hdr = envihdrreadx(hdrpath);
                 obj.hdr = hdr;
             end
             
         end
         function img = readimg(obj)
-            img = envidataread_v2(obj.imgPath,obj.hdr);
+            img = envidataread_v2(obj.imgpath,obj.hdr);
             if nargout<1
                 obj.img = img;
             end
@@ -70,24 +70,24 @@ classdef HSI < handle
             end
         end
         function spc = lazyEnviRead(obj,s,l)
-            spc = lazyEnviRead_v2(obj.imgPath,obj.hdr,s,l);
+            spc = lazyEnviRead_v2(obj.imgpath,obj.hdr,s,l);
         end
         function spc = lazyEnviReadi(obj,s,l)
             spc = obj.lazyEnviRead(s,l);
             spc = flip(spc);
         end
         function imb = lazyEnviReadb(obj,b)
-            imb = lazyEnviReadb_v2(obj.imgPath,obj.hdr,b);
+            imb = lazyEnviReadb_v2(obj.imgpath,obj.hdr,b);
         end
         function imc = lazyEnviReadc(obj,c)
-            imc = lazyEnviReadc_v2(obj.imgPath,obj.hdr,c);
+            imc = lazyEnviReadc_v2(obj.imgpath,obj.hdr,c);
         end
         function imc = lazyEnviReadci(obj,c)
             imc = obj.lazyEnviReadc(c);
             imc = flip(imc,2);
         end
         function imrgb = lazyEnviReadRGB(obj,rgb)
-            imrgb = lazyEnviReadRGB(obj.imgPath,obj.hdr,rgb);
+            imrgb = lazyEnviReadRGB(obj.imgpath,obj.hdr,rgb);
         end
     end
     
