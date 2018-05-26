@@ -6,11 +6,28 @@ function [imgPath] = guessEnviIMGPATH(basename,dirPath)
 % Output Parameters
 %   imgPath: full file path to the image file
 
-imgPath = joinPath(dirPath,[basename '.img']);
-if ~exist(imgPath,'file')
-    imgPath = joinPath(dirPath,basename);
+if ismac
+    imgPath = joinPath(dirPath,[basename '.img']);
     if ~exist(imgPath,'file')
-        warning('Image file cannot be found.');
-        imgPath = '';
+        imgPath = joinPath(dirPath,basename);
+        if ~exist(imgPath,'file')
+            warning('Image file cannot be found.');
+            imgPath = '';
+        end
     end
+elseif isunix
+    imgname = [basename '.img'];
+    [imgname] = findfilei(imgname,dirPath);
+    if isempty(imgname)
+        imgname = basename;
+        [imgname] = findfilei(imgname,dirPath);
+        if isempty(imgname)
+           warning('Image file cannot be found');
+        end
+    end
+    if ~isempty(imgname)
+        imgPath = joinPath(dirPath,imgname);
+    end
+end
+
 end
