@@ -42,6 +42,7 @@ elseif isunix
             if iswarning
                 warning('Header file cannot be found');
             end
+            hdrPath = '';
         end
     end
     if ~isempty(hdrname)

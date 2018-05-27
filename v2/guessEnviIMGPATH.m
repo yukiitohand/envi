@@ -25,7 +25,7 @@ if ismac
     imgPath = joinPath(dirPath,[basename '.img']);
     if ~exist(imgPath,'file')
         if iswarning
-            warning('Image file cannot be found.');
+            warning('Image file %s cannot be found.',basename);
         end
         imgPath = '';
     end
@@ -36,8 +36,9 @@ elseif isunix
         imgname = basename;
         [imgname] = findfilei(imgname,dirPath);
         if isempty(imgname)
-           warning('Image file cannot be found');
+           warning('Image file %s cannot be found',basename);
         end
+        imgPath='';
     end
     if ~isempty(imgname)
         imgPath = joinPath(dirPath,imgname);
