@@ -21,7 +21,7 @@ else
     end
 end
 
-if ismac
+if ismac || ispc
     imgPath = joinPath(dirPath,[basename '.img']);
     if ~exist(imgPath,'file')
         if iswarning

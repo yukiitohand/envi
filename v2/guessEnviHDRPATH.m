@@ -21,7 +21,7 @@ else
     end
 end
 
-if ismac
+if ismac || ispc
     hdrPath = joinPath(dirPath,[basename '.hdr']);
     if ~exist(hdrPath,'file')
         hdrPath = joinPath(dirPath,[basename '.img.hdr']);
