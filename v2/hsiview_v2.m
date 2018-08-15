@@ -109,6 +109,15 @@ output_txt = {['X: ',num2str(pos(1),4)],...
 if length(pos) > 2
     output_txt{end+1} = ['Z: ',num2str(pos(3),4)];
 end
+% 
+for i=1:length(hsiar)
+    if isprop(hsiar{i},'glt_x') && isprop(hsiar{i},'glt_y')
+        if ~isempty(hsiar{i}.glt_x) && ~isempty(hsiar{i}.glt_y)
+            output_txt{end+1} = [legends{i} '-GLT_x: ',num2str(hsiar{i}.glt_x(pos(2),pos(1)))];
+            output_txt{end+1} = [legends{i} '-GLT_y: ',num2str(hsiar{i}.glt_y(pos(2),pos(1)))];
+        end
+    end
+end
 
 if length(hsiar)~=length(legends)
     error('size of hsi and legends are different');

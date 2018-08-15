@@ -89,7 +89,7 @@ for idx=1:length(params)
         end
         val_str = ['{' val_str(1:end-1) '}'];
         line=[param,' = ',val_str];
-    elseif strcmp(param,'band_names')
+    elseif strcmp(param,'band names')
         % this case is added by Yuki Itoh on May 31, 2017
         val_str = newline;
         for i=1:length(value)
@@ -97,7 +97,7 @@ for idx=1:length(params)
             if (length(val_str)+length(itm_new)) > 75
                 val_str = [val_str sprintf('\n %s,',itm_new)];
             else
-                val_str = [val_str itm_new];
+                val_str = [val_str itm_new ','];
             end
         end
         val_str = ['{' val_str(1:end-1) '}'];
@@ -120,6 +120,8 @@ for idx=1:length(params)
             value.projection,value.image_coords(1),value.image_coords(2),...
             value.mapx,value.mapy,value.dx,value.dy,value.datum,value.units);
         line=[param,' = ',val_str];
+    elseif strcmp(param,'projection info')
+        line = [param,' = ', value]; 
     elseif any(strcmpi(param,activeFieldList))
         line=[param,' = ',num2str(value)];
     else
