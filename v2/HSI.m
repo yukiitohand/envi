@@ -38,6 +38,9 @@ classdef HSI < handle
         img = [];
         wa = [];
         BP = [];
+        GP = [];
+        BP1nan = [];
+        GP1nan = [];
     end
     
     methods
@@ -89,6 +92,15 @@ classdef HSI < handle
         function imrgb = lazyEnviReadRGB(obj,rgb)
             imrgb = lazyEnviReadRGB(obj.imgpath,obj.hdr,rgb);
         end
+        function [wv,spc] = get_spectrum(obj,s,l,varargin)
+            [wv,spc] = get_spectrum_HSI(obj,s,l,varargin{:});
+        end
+        function [wv,spc] = get_spectrumi(obj,s,l,varargin)
+            [wv,spc] = get_spectrum(obj,s,l,varargin{:});
+            wv = flip(wv);
+            spc = flip(spc);
+        end
+        
     end
     
 end
