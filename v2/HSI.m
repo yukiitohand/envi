@@ -41,6 +41,11 @@ classdef HSI < handle
         GP = [];
         BP1nan = [];
         GP1nan = [];
+        is_hdr_band_inverse = false;
+        is_img_band_inverse = false;
+        is_wa_band_inverse = false;
+        is_bp1nan_inverse = false;
+        is_gp1nan_inverse = false;
     end
     
     methods
@@ -70,6 +75,7 @@ classdef HSI < handle
             img = flip(img,3);
             if nargout<1
                 obj.img = img;
+                obj.is_img_band_inverse = true;
             end
         end
         function spc = lazyEnviRead(obj,s,l)
@@ -82,6 +88,10 @@ classdef HSI < handle
         function imb = lazyEnviReadb(obj,b)
             imb = lazyEnviReadb_v2(obj.imgpath,obj.hdr,b);
         end
+        function imb = lazyEnviReadbi(obj,b)
+            b = obj.hdr.bands-b+1;
+            imb = lazyEnviReadb_v2(obj.imgpath,obj.hdr,b);
+        end
         function imc = lazyEnviReadc(obj,c)
             imc = lazyEnviReadc_v2(obj.imgpath,obj.hdr,c);
         end
@@ -92,13 +102,30 @@ classdef HSI < handle
         function imrgb = lazyEnviReadRGB(obj,rgb)
             imrgb = lazyEnviReadRGB(obj.imgpath,obj.hdr,rgb);
         end
-        function [wv,spc] = get_spectrum(obj,s,l,varargin)
-            [wv,spc] = get_spectrum_HSI(obj,s,l,varargin{:});
+        function [spc,wv] = get_spectrum(obj,s,l,varargin)
+            [spc,wv] = get_spectrum_HSI(obj,s,l,...
+                'WA_BAND_INVERSE',obj.is_wa_band_inverse,...
+                'IMG_BAND_INVERSE',obj.is_img_band_inverse,...
+                varargin{:});
         end
-        function [wv,spc] = get_spectrumi(obj,s,l,varargin)
-            [wv,spc] = get_spectrum(obj,s,l,varargin{:});
+        function [spc,wv] = get_spectrumi(obj,s,l,varargin)
+            [spc,wv] = obj.get_spectrum(s,l,varargin{:});
+            % [spc,wv] = get_spectrum(obj,s,l,varargin{:});
             wv = flip(wv);
             spc = flip(spc);
+        end
+        function setwa(obj,wa,is_wa_band_inverse)
+            obj.wa = wa;
+            obj.is_wa_band_inverse = is_wa_band_inverse;
+        end
+        function setBP1nan(obj,BP1nan,is_bp1nan_inverse)
+            obj.BP1nan = BP1nan;
+            obj.is_bp1nan_inverse = is_bp1nan_inverse;
+        end
+        
+        function setGP1nan(obj,GP1nan,is_gp1nan_inverse)
+            obj.GP1nan = GP1nan;
+            obj.is_gp1nan_inverse = is_gp1nan_inverse;
         end
         
     end

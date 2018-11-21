@@ -39,8 +39,10 @@ if exist('sc','file')~=2
 end
 
 bands = cell(1,length(hsiar));
+is_bands_inverse = false(1,length(hsiar));
 ave_window = cell(1,length(hsiar));
 ave_window(:) = {[1 1]};
+spc_shifts = zeros(1,length(hsiar));
 varargin_plot = cell(1,length(hsiar));
 varargin_plot(:) = {{}};
 xlim1 = [];
@@ -51,10 +53,14 @@ else
         switch upper(varargin{n}) 
             case 'BANDS'
                 bands = varargin{n+1};
+            case 'BANDS_INVERSE'
+                is_bands_inverse = varargin{n+1};
             case 'AVERAGE_WINDOW'
                 ave_window = varargin{n+1};
             case 'XLIM'
                 xlim1 = varargin{n+1};
+            case 'SHIFTS'
+                spc_shifts = varargin{n+1};
             case 'VARARGIN_PLOT'
                 varargin_plot = varargin{n+1};
             otherwise
@@ -75,7 +81,8 @@ ax_im.Position = [0.1 0.1 0.8 0.8];
 axis(ax_im,'on');
 set(ax_im,'dataAspectRatio',[1 1 1]);
 hdt = datacursormode(gcf);
-set(hdt,'UpdateFcn',{@map_cursor_crismx,rgb,ax_spc,hsiar,legends,keepHdl,xlim1,bands,ave_window,varargin_plot});
+set(hdt,'UpdateFcn',{@map_cursor_crismx,rgb,ax_spc,hsiar,legends,keepHdl,...
+    xlim1,bands,is_bands_inverse,ave_window,spc_shifts,varargin_plot});
 
 imgObj = ax_im.Children;
 
@@ -94,7 +101,7 @@ d = uicontrol(fig_im,'Style','pushbutton','String','Keep Delete',...
 end
 
 function output_txt = map_cursor_crismx(obj,event_obj,CData,ax_spc,hsiar,legends,...
-                               keepHdl,xlim1,bands,ave_window,varargin_plot)
+                               keepHdl,xlim1,bands,is_bands_inverse,ave_window,spc_shifts,varargin_plot)
 % Display the position of the data cursor
 % obj          Currently not used (empty)
 % event_obj    Handle to event object
@@ -138,20 +145,32 @@ if ~isempty(keepHdl.crd)
         l = keepHdl.crd(n,2); s = keepHdl.crd(n,1);
         for i=1:nhsi
             bands_i = bands{i};
+            is_bands_inverse_i = is_bands_inverse(i);
             ave_window_i = ave_window{i};
+            spc_shift = spc_shifts(i);
             varargin_plot_i = varargin_plot{i};
-            [wv,spc] = hsiar{i}.get_spectrum(s,l,'BANDS',bands_i,'AVERAGE_WINDOW',ave_window_i);
+            [spc,wv] = hsiar{i}.get_spectrum(s,l,'BANDS',bands_i,...
+                'BANDS_INVERSE',is_bands_inverse_i,'AVERAGE_WINDOW',ave_window_i);
+            spc = spc+spc_shift;
             plot(ax_spc,wv,spc,varargin_plot_i{:},...
                         'DisplayName',sprintf('%s X:% 4d, Y:% 4d',legends{i},s,l));
             hold(ax_spc,'on');
             if ~isempty(hsiar{i}.BP1nan)
-                [wv,spcbp] = hsiar{i}.get_spectrum(s,l,'BANDS',bands_i,'AVERAGE_WINDOW',ave_window_i,'COEFF',hsiar{i}.BP1nan(:,s));
+                [spcbp,wv] = hsiar{i}.get_spectrum(s,l,...
+                    'BANDS',bands_i,'BANDS_INVERSE',is_bands_inverse_i,...
+                    'AVERAGE_WINDOW',ave_window_i,...
+                    'COEFF',hsiar{i}.BP1nan(:,s),'COEFF_INVERSE',hsiar{i}.is_bp1nan_inverse);
+                spcbp = spcbp+spc_shift;
                 plot(ax_spc,wv,spcbp,'x-',...
                         'DisplayName',sprintf('BP - %s X:% 4d, Y:% 4d',legends{i},s,l),'x-');  
             end
             if ~isempty(hsiar{i}.GP1nan)
-                [wv,spcbp] = hsiar{i}.get_spectrum(s,l,'BANDS',bands_i,'AVERAGE_WINDOW',ave_window_i,'COEFF',hsiar{i}.BP1nan(:,s));
-                plot(ax_spc,wv,spcbp,'+-',...
+                [spcgp,wv] = hsiar{i}.get_spectrum(s,l,...
+                    'BANDS',bands_i,'BANDS_INVERSE',is_bands_inverse_i,...
+                    'AVERAGE_WINDOW',ave_window_i,...
+                    'COEFF',hsiar{i}.GP1nan(:,s),'COEFF_INVERSE',hsiar{i}.is_gp1nan_inverse);
+                spcgp = spcgp+spc_shift;
+                plot(ax_spc,wv,spcgp,'+-',...
                         'DisplayName',sprintf('GP - %s X:% 4d, Y:% 4d',legends{i},s,l));  
             end
             hold(ax_spc,'on');
@@ -169,20 +188,32 @@ end
 s = pos(1); l = pos(2);
 for i=1:nhsi
     bands_i = bands{i};
+    is_bands_inverse_i = is_bands_inverse(i);
     ave_window_i = ave_window{i};
+    spc_shift = spc_shifts(i);
     varargin_plot_i = varargin_plot{i};
-    [wv,spc] = hsiar{i}.get_spectrum(s,l,'BANDS',bands_i,'AVERAGE_WINDOW',ave_window_i);
+    [spc,wv] = hsiar{i}.get_spectrum(s,l,'BANDS',bands_i,...
+        'BANDS_INVERSE',is_bands_inverse_i,'AVERAGE_WINDOW',ave_window_i);
+    spc = spc+spc_shift;
     plot(ax_spc,wv,spc,varargin_plot_i{:},...
                 'DisplayName',sprintf('%s X:% 4d, Y:% 4d',legends{i},s,l));
     hold(ax_spc,'on');
     if ~isempty(hsiar{i}.BP1nan)
-        [wv,spcbp] = hsiar{i}.get_spectrum(s,l,'BANDS',bands_i,'AVERAGE_WINDOW',ave_window_i,'COEFF',hsiar{i}.BP1nan(:,s));
+        [spcbp,wv] = hsiar{i}.get_spectrum(s,l,...
+            'BANDS',bands_i,'BANDS_INVERSE',is_bands_inverse_i,...
+            'AVERAGE_WINDOW',ave_window_i,...
+            'COEFF',hsiar{i}.BP1nan(:,s),'COEFF_INVERSE',hsiar{i}.is_bp1nan_inverse);
+        spcbp = spcbp+spc_shift;
         plot(ax_spc,wv,spcbp,'x-',...
                 'DisplayName',sprintf('BP - %s X:% 4d, Y:% 4d',legends{i},s,l));  
     end
     if ~isempty(hsiar{i}.GP1nan)
-        [wv,spcbp] = hsiar{i}.get_spectrum(s,l,'BANDS',bands_i,'AVERAGE_WINDOW',ave_window_i,'COEFF',hsiar{i}.GP1nan(:,s));
-        plot(ax_spc,wv,spcbp,'+-',...
+        [spcgp,wv] = hsiar{i}.get_spectrum(s,l,...
+            'BANDS',bands_i,'BANDS_INVERSE',is_bands_inverse_i,...
+        'AVERAGE_WINDOW',ave_window_i,...
+        'COEFF',hsiar{i}.GP1nan(:,s),'COEFF_INVERSE',hsiar{i}.is_gp1nan_inverse);
+        spcgp = spcgp+spc_shift;
+        plot(ax_spc,wv,spcgp,'+-',...
                 'DisplayName',sprintf('GP - %s X:% 4d, Y:% 4d',legends{i},s,l));  
     end
     spcList = [spcList;spc(~isnan(spc))];
