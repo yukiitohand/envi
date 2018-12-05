@@ -152,8 +152,13 @@ if ~isempty(keepHdl.crd)
             [spc,wv] = hsiar{i}.get_spectrum(s,l,'BANDS',bands_i,...
                 'BANDS_INVERSE',is_bands_inverse_i,'AVERAGE_WINDOW',ave_window_i);
             spc = spc+spc_shift;
-            plot(ax_spc,wv,spc,varargin_plot_i{:},...
-                        'DisplayName',sprintf('%s X:% 4d, Y:% 4d',legends{i},s,l));
+            if ~isempty(varargin_plot_i)
+                plot(ax_spc,wv,spc,varargin_plot_i{:},...
+                            'DisplayName',sprintf('%s X:% 4d, Y:% 4d',legends{i},s,l));
+            else
+                plot(ax_spc,wv,spc,...
+                            'DisplayName',sprintf('%s X:% 4d, Y:% 4d',legends{i},s,l));
+            end
             hold(ax_spc,'on');
             if ~isempty(hsiar{i}.BP1nan)
                 [spcbp,wv] = hsiar{i}.get_spectrum(s,l,...
@@ -162,7 +167,7 @@ if ~isempty(keepHdl.crd)
                     'COEFF',hsiar{i}.BP1nan(:,s),'COEFF_INVERSE',hsiar{i}.is_bp1nan_inverse);
                 spcbp = spcbp+spc_shift;
                 plot(ax_spc,wv,spcbp,'x-',...
-                        'DisplayName',sprintf('BP - %s X:% 4d, Y:% 4d',legends{i},s,l),'x-');  
+                        'DisplayName',sprintf('BP - %s X:% 4d, Y:% 4d',legends{i},s,l));  
             end
             if ~isempty(hsiar{i}.GP1nan)
                 [spcgp,wv] = hsiar{i}.get_spectrum(s,l,...
@@ -195,8 +200,13 @@ for i=1:nhsi
     [spc,wv] = hsiar{i}.get_spectrum(s,l,'BANDS',bands_i,...
         'BANDS_INVERSE',is_bands_inverse_i,'AVERAGE_WINDOW',ave_window_i);
     spc = spc+spc_shift;
-    plot(ax_spc,wv,spc,varargin_plot_i{:},...
+    if ~isempty(varargin_plot_i)
+        plot(ax_spc,wv,spc,varargin_plot_i{:},...
+                    'DisplayName',sprintf('%s X:% 4d, Y:% 4d',legends{i},s,l));
+    else
+        plot(ax_spc,wv,spc,...
                 'DisplayName',sprintf('%s X:% 4d, Y:% 4d',legends{i},s,l));
+    end
     hold(ax_spc,'on');
     if ~isempty(hsiar{i}.BP1nan)
         [spcbp,wv] = hsiar{i}.get_spectrum(s,l,...
