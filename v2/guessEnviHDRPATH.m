@@ -2,7 +2,8 @@ function [hdrPath] = guessEnviHDRPATH(basename,dirPath,varargin)
 % [hdrPath] = guessHDRPATH(basename,dirPath,varargin)
 % Input Parameters
 %   basename: string, basename of the header file
-%   dirPath: string, directory path in which the header file is stored.
+%   dirPath: string, directory path in which the header file is stored. if
+%            empty, then './' will be set.
 % Output Parameters
 %   hdrPath: full file path to the header file
 % Optional Parameters
@@ -19,6 +20,10 @@ else
                 iswarning = varargin{i+1};
         end
     end
+end
+
+if isempty(dirPath)
+    dirPath = './';
 end
 
 if ismac || ispc

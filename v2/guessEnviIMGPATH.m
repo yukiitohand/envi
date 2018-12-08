@@ -2,7 +2,8 @@ function [imgPath] = guessEnviIMGPATH(basename,dirPath,varargin)
 % [imgPath] = guessHDRPATH(basename,dirPath,varargin)
 % Input Parameters
 %   basename: string, basename of the image file
-%   dirPath: string, directory path in which the image file is stored.
+%   dirPath: string, directory path in which the image file is stored. if
+%            empty, then './' will be set.
 % Output Parameters
 %   imgPath: full file path to the image file
 % Optional Parameters
@@ -19,6 +20,10 @@ else
                 iswarning = varargin{i+1};
         end
     end
+end
+
+if isempty(dirPath)
+    dirPath = './';
 end
 
 if ismac || ispc
