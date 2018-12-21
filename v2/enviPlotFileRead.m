@@ -42,7 +42,7 @@ while ~headerlgnd_fin
     tline = fgetl(fp);
     lgnd_match  =  regexpi(tline,ptrn_legend,'names');
     if isempty(lgnd_match)
-        if isempty(regexpi(tline,ptrn_blankline,'once'))
+        if ~isempty(tline) || isempty(regexpi(tline,ptrn_blankline,'once'))
             % skip any blankline
             headerlgnd_fin = true;
         end
