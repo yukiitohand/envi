@@ -1,4 +1,4 @@
-function [ iml ] = lazyEnviReadl( datafile,hdr_info,line)
+function [ iml ] = lazyEnviReadl( datafile,hdr_info,l)
 % [ iml ] = lazyEnviReadl( datafile,info,line )
 % read one line of hyperspectral data.
 %   Inputs:
@@ -49,7 +49,7 @@ fid = fopen(datafile);
 
 iml = zeros([bands,samples],typeName);
 if strcmp(interleave,'bil') % BIL type: sample -> band -> line
-    offset = s*(samples*bands*(line-1))+header_offset;
+    offset = s*(samples*bands*(l-1))+header_offset;
     fseek(fid, offset, -1);
     iml = fread(fid,samples*bands,typeName,0,machine);
     iml = reshape(iml,[samples,bands])';
@@ -59,7 +59,7 @@ if strcmp(interleave,'bil') % BIL type: sample -> band -> line
         iml = int16(iml);
     end
 elseif strcmp(interleave,'bsq') % sample -> line -> band
-    offset = s*(samples*(line-1));
+    offset = s*(samples*(l-1));
     skips = s*samples*(lines-1);
     fseek(fid, offset, -1);
     for b=1:bands

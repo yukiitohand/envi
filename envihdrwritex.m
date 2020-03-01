@@ -124,6 +124,8 @@ for idx=1:length(params)
         line = [param,' = ', value]; 
     elseif any(strcmpi(param,activeFieldList))
         line=[param,' = ',num2str(value)];
+    elseif any(strcmpi(param,{'x','y'}))
+        line = '';
     else
         if isnumeric(value) && ~isscalar(value)
             if all(value==floor(value))
@@ -145,8 +147,9 @@ for idx=1:length(params)
     end
     % the cases are created by Yuki Jan. 12, 2015 for customized
     % envihdrread_yuki.m
-    
-    fprintf(fid,'%s\n',line);
+    if ~isempty(line)
+        fprintf(fid,'%s\n',line);
+    end
     
 end
 
