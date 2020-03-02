@@ -44,8 +44,11 @@ switch hdr_info.byte_order
         machine = 'n';
 end
 
-
-fid = fopen(datafile);
+if isnumeric(datafile)
+    fid = datafile;
+elseif ischar(datafile)
+    fid = fopen(datafile);
+end
 
 iml = zeros([bands,samples],typeName);
 if strcmp(interleave,'bil') % BIL type: sample -> band -> line
@@ -68,7 +71,9 @@ elseif strcmp(interleave,'bsq') % sample -> line -> band
     end
 end
 
-fclose(fid);
+if ischar(datafile)
+    fclose(fid);
+end
 
 end
     

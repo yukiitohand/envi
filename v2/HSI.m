@@ -95,6 +95,17 @@ classdef HSI < handle
         function imc = lazyEnviReadc(obj,c)
             imc = lazyEnviReadc_v2(obj.imgpath,obj.hdr,c);
         end
+        function imcList = lazyEnviReadcList(obj,cList)
+            imcList = [];
+            for c=cList
+                imc = lazyEnviReadc_v2(obj.imgpath,obj.hdr,c);
+                imcList = cat(3,imcList,imc);
+            end
+        end
+        function imcList = lazyEnviReadcListi(obj,cList)
+            imcList = obj.lazyEnviReadcList(cList);
+            imcList = flip(imcList,2);
+        end
         function imc = lazyEnviReadci(obj,c)
             imc = obj.lazyEnviReadc(c);
             imc = flip(imc,2);
@@ -111,8 +122,12 @@ classdef HSI < handle
         function [spc,wv] = get_spectrumi(obj,s,l,varargin)
             [spc,wv] = obj.get_spectrum(s,l,varargin{:});
             % [spc,wv] = get_spectrum(obj,s,l,varargin{:});
-            wv = flip(wv);
-            spc = flip(spc);
+            wv = flip(wv,1);
+            if numel(size(spc))>=3
+                spc = flip(spc,3);
+            else
+                spc = flip(spc,1);
+            end
         end
         function setwa(obj,wa,is_wa_band_inverse)
             obj.wa = wa;

@@ -1,6 +1,8 @@
-function[spc,wv] = get_spectrum_HSI(hsi,s,l,varargin)
+function [spc,wv] = get_spectrum_HSI(hsi,s,l,varargin)
+% AVERAGE_WINDOW: [y_size,x_size]
 
 ave_window = [1 1];
+do_average = true;
 bands = true(hsi.hdr.bands,1);
 coeff = ones(hsi.hdr.bands,1);
 is_wa_band_inverse = false;
@@ -17,6 +19,8 @@ else
                 bands = varargin{i+1};
             case 'AVERAGE_WINDOW'
                 ave_window = varargin{i+1};
+            case 'DO_AVERAGE'
+                do_average = varargin{i+1};
             case 'COEFF'
                 coeff = varargin{i+1};
             case 'WA_BAND_INVERSE'
@@ -54,49 +58,70 @@ if is_coeff_inverse
     coeff = flip(coeff);
 end
 
+% load spectrum
+wdw_strt = -floor((ave_window-1)/2)+[l,s];
+wdw_end = floor(ave_window/2)+[l,s];
+
 % load wavelength
 if ~isempty(hsi.wa)
-    wv = hsi.wa(:,s);
-    if is_wa_band_inverse
-        wv = flip(wv);
+    if do_average
+        wv = hsi.wa(:,s);
+    else
+        wv = hsi.wa(:,wdw_strt(2):wdw_end(2));
     end
-elseif isfield('wavelength',hsi.hdr)
+    if is_wa_band_inverse
+        wv = flip(wv,1);
+    end
+elseif isfield(hsi.hdr,'wavelength')
     wv = hsi.hdr.wavelength;
 else
     wv = 1:hsi.hdr.bands; % band is returned when no information for wavelength
 end
 
-% load spectrum
-ave_strt = -floor((ave_window-1)/2)+[l,s];
-ave_end = floor(ave_window/2)+[l,s];
 if isempty(hsi.img)
-    spcs = [];
-    for ll = ave_strt(1):ave_end(1)
-        for ss = ave_strt(2):ave_end(2)
+    spc = nan(ave_window(1),ave_window(2),hsi.hdr.bands);
+    lidx = 1;
+    for ll = wdw_strt(1):wdw_end(1)
+        sidx = 1;
+        for ss = wdw_strt(2):wdw_end(2)
             spc_ll_ss = hsi.lazyEnviRead(ss,ll);
-            spcs = [spcs spc_ll_ss];
+            spc(lidx,sidx,:) = spc_ll_ss;
+            sidx = sidx + 1;
         end
+        lidx = lidx + 1;
     end
-    spc = nanmean(spcs,2);
 else
-    spc = squeeze(nanmean(nanmean(hsi.img(ave_strt(1):ave_end(1),ave_strt(2):ave_end(2),:),2),1));
+    spc = hsi.img(wdw_strt(1):wdw_end(1),wdw_strt(2):wdw_end(2),:);
     if is_img_band_inverse
-        spc = flip(spc);
+        spc = flip(spc,3);
     end
+end
+
+if do_average
+    spc = nanmean(spc,[1,2]);
 end
 
 if l_coeff==l_bands
     % perform bands option if given
-    wv = wv(bands);
-    spc = spc(bands);
-    spc = spc .* coeff;
+    if isvector(wv)
+        wv = wv(bands);
+    elseif ismatrix(wv)
+        wv = wv(bands,:);
+    end
+    spc = spc(:,:,bands);
+    spc = spc .* permute(coeff,[3,2,1]);
 elseif l_coeff==hsi.hdr.bands
-    spc = spc .* coeff;
+    spc = spc .* permute(coeff,[3,2,1]);
     % perform bands option if given
-    wv = wv(bands);
-    spc = spc(bands);
+    if isvector(wv)
+        wv = wv(bands);
+    elseif ismatrix(wv)
+        wv = wv(bands,:);
+    end
+    spc = spc(:,:,bands);
 else
     error('length of coeff %d is not right.',l_coeff);
 end
+spc = squeeze(spc);
 
 end

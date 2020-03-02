@@ -235,7 +235,7 @@ axis(ax_spc,'tight');
 hold(ax_spc,'off');
 xlabel(ax_spc,'Wavelength');
 ylabel(ax_spc,'Reflectance');
-legend(ax_spc);
+legend(ax_spc,'Location','northwest','Interpreter','none');
 if ~isempty(xlim1)
     xlim(ax_spc,xlim1);
 end
