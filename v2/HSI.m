@@ -111,11 +111,29 @@ classdef HSI < handle
             imc = obj.lazyEnviReadc(c);
             imc = flip(imc,2);
         end
-        function [iml] = lazyEnviReadl(obj,l)
+        function [iml] = lazyEnviReadl(obj,l,varargin)
+            % USAGE
+            %  hsi.lazyEnviReadl(l)
+            %  hsi.lazyEnviReadl(l,0) % when you want to keep file id to
+            %  the image open. This is faster when you read many lines
+            %  repeatedly. You do not need to move the position of the file
+            %  pointer (counted always from the top).
+            closefile = true;
+            if length(varargin)==1
+                closefile = varargin{1};
+            elseif isempty(varargin)
+                
+            else
+                error('Too many parameters');
+            end
             if obj.fid_img == -1
                 obj.fid_img = fopen(obj.imgpath,'r');
             end
             iml = lazyEnviReadl(obj.fid_img,l);
+            
+            if closefile
+                obj.fclose_img();
+            end   
         end
         function [iml] = lazyEnviReadli(obj,l)
             iml = obj.lazyEnviReadl(l);
