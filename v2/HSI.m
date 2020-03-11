@@ -46,6 +46,7 @@ classdef HSI < handle
         is_wa_band_inverse = false;
         is_bp1nan_inverse = false;
         is_gp1nan_inverse = false;
+        fid_img = -1;
     end
     
     methods
@@ -110,6 +111,16 @@ classdef HSI < handle
             imc = obj.lazyEnviReadc(c);
             imc = flip(imc,2);
         end
+        function [iml] = lazyEnviReadl(obj,l)
+            if obj.fid_img == -1
+                obj.fid_img = fopen(obj.imgpath,'r');
+            end
+            iml = lazyEnviReadl(obj.fid_img,l);
+        end
+        function [iml] = lazyEnviReadli(obj,l)
+            iml = obj.lazyEnviReadl(l);
+            iml = flip(iml,1);
+        end
         function imrgb = lazyEnviReadRGB(obj,rgb)
             imrgb = lazyEnviReadRGB(obj.imgpath,obj.hdr,rgb);
         end
@@ -141,6 +152,9 @@ classdef HSI < handle
         function setGP1nan(obj,GP1nan,is_gp1nan_inverse)
             obj.GP1nan = GP1nan;
             obj.is_gp1nan_inverse = is_gp1nan_inverse;
+        end
+        function [] = fclose_img(obj)
+            fclose(obj.fid_img);
         end
         
     end
