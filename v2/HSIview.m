@@ -49,11 +49,17 @@ classdef HSIview < handle
                     obj.nhsi = length(hsiar);
                     obj.hsiar = [];
                     for i=1:obj.nhsi
-                        obj.hsiar = [obj.hsiar obj.parse_hsiar(hsiar{i})];
+                        if iscell(hsiar{i})
+                            obj.hsiar = [obj.hsiar obj.parse_hsiar(hsiar{i})];
+                        elseif isa(hsiar{i},'HSI')
+                            obj.hsiar = [obj.hsiar obj.parse_hsiar({hsiar{i}})];
+                        else
+                            error('Input hsiar is not proper.');
+                        end
                     end
-                elseif isa(hsiar{1},'HSI')
+                elseif isa(hsiar,'HSI')
                     obj.nhsi = 1;
-                    obj.hsiar = obj.parse_hsiar(hsiar);
+                    obj.hsiar = obj.parse_hsiar({hsiar});
                 end
             end
             
