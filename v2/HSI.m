@@ -129,7 +129,7 @@ classdef HSI < handle
             if obj.fid_img == -1
                 obj.fid_img = fopen(obj.imgpath,'r');
             end
-            iml = lazyEnviReadl(obj.fid_img,l);
+            iml = lazyEnviReadl(obj.fid_img,obj.hdr,l);
             
             if closefile
                 obj.fclose_img();
@@ -142,16 +142,17 @@ classdef HSI < handle
         function imrgb = lazyEnviReadRGB(obj,rgb)
             imrgb = lazyEnviReadRGB(obj.imgpath,obj.hdr,rgb);
         end
-        function [spc,wv] = get_spectrum(obj,s,l,varargin)
-            [spc,wv] = get_spectrum_HSI(obj,s,l,...
+        function [spc,wv,bdxes] = get_spectrum(obj,s,l,varargin)
+            [spc,wv,bdxes] = get_spectrum_HSI(obj,s,l,...
                 'WA_BAND_INVERSE',obj.is_wa_band_inverse,...
                 'IMG_BAND_INVERSE',obj.is_img_band_inverse,...
                 varargin{:});
         end
-        function [spc,wv] = get_spectrumi(obj,s,l,varargin)
-            [spc,wv] = obj.get_spectrum(s,l,varargin{:});
+        function [spc,wv,bdxes] = get_spectrumi(obj,s,l,varargin)
+            [spc,wv,bdxes] = obj.get_spectrum(s,l,varargin{:});
             % [spc,wv] = get_spectrum(obj,s,l,varargin{:});
             wv = flip(wv,1);
+            bdxes = flip(bdxes,1);
             if numel(size(spc))>=3
                 spc = flip(spc,3);
             else
@@ -173,6 +174,7 @@ classdef HSI < handle
         end
         function [] = fclose_img(obj)
             fclose(obj.fid_img);
+            obj.fid_img = -1;
         end
         
     end

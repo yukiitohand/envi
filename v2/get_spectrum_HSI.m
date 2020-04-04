@@ -1,4 +1,4 @@
-function [spc,wv] = get_spectrum_HSI(hsi,s,l,varargin)
+function [spc,wv,band_idxes] = get_spectrum_HSI(hsi,s,l,varargin)
 % AVERAGE_WINDOW: [y_size,x_size]
 
 ave_window = [1 1];
@@ -32,7 +32,6 @@ else
             case 'BANDS_INVERSE'
                 is_bands_inverse = varargin{i+1};
             otherwise
-                % Hmmm, something wrong with the parameter string
                 error('Unrecognized option: %s', varargin{i});
         end
     end
@@ -123,5 +122,7 @@ else
     error('length of coeff %d is not right.',l_coeff);
 end
 spc = squeeze(spc);
+
+band_idxes = find(bands);
 
 end
