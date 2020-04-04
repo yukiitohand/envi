@@ -45,6 +45,7 @@ ave_window(:) = {[1 1]};
 spc_shifts = zeros(1,length(hsiar));
 varargin_plot = cell(1,length(hsiar));
 varargin_plot(:) = {{}};
+mode_ylim = 'STRETCH01';
 xlim1 = [];
 if (rem(length(varargin),2)==1)
     error('Optional parameters should always go by pairs');
@@ -63,9 +64,11 @@ else
                 spc_shifts = varargin{n+1};
             case 'VARARGIN_PLOT'
                 varargin_plot = varargin{n+1};
+            case 'YLIM_MODE'
+                mode_ylim = varargin{n+1};
             otherwise
                 % Hmmm, something wrong with the parameter string
-                error(['Unrecognized option: ''' varargin{n} '''']);
+                error('Unrecognized option: %s', varargin{n});
         end
     end
 end
@@ -82,7 +85,7 @@ axis(ax_im,'on');
 set(ax_im,'dataAspectRatio',[1 1 1]);
 hdt = datacursormode(gcf);
 set(hdt,'UpdateFcn',{@map_cursor_crismx,rgb,ax_spc,hsiar,legends,keepHdl,...
-    xlim1,bands,is_bands_inverse,ave_window,spc_shifts,varargin_plot});
+    xlim1,bands,is_bands_inverse,ave_window,spc_shifts,mode_ylim,varargin_plot});
 
 imgObj = ax_im.Children;
 
@@ -101,7 +104,7 @@ d = uicontrol(fig_im,'Style','pushbutton','String','Keep Delete',...
 end
 
 function output_txt = map_cursor_crismx(obj,event_obj,CData,ax_spc,hsiar,legends,...
-                               keepHdl,xlim1,bands,is_bands_inverse,ave_window,spc_shifts,varargin_plot)
+                               keepHdl,xlim1,bands,is_bands_inverse,ave_window,spc_shifts,mode_ylim,varargin_plot)
 % Display the position of the data cursor
 % obj          Currently not used (empty)
 % event_obj    Handle to event object
@@ -201,10 +204,10 @@ for i=1:nhsi
         'BANDS_INVERSE',is_bands_inverse_i,'AVERAGE_WINDOW',ave_window_i);
     spc = spc+spc_shift;
     if ~isempty(varargin_plot_i)
-        plot(ax_spc,wv,spc,varargin_plot_i{:},...
+        p = plot(ax_spc,wv,spc,varargin_plot_i{:},...
                     'DisplayName',sprintf('%s X:% 4d, Y:% 4d',legends{i},s,l));
     else
-        plot(ax_spc,wv,spc,...
+        p = plot(ax_spc,wv,spc,...
                 'DisplayName',sprintf('%s X:% 4d, Y:% 4d',legends{i},s,l));
     end
     hold(ax_spc,'on');
@@ -214,7 +217,7 @@ for i=1:nhsi
             'AVERAGE_WINDOW',ave_window_i,...
             'COEFF',hsiar{i}.BP1nan(:,s),'COEFF_INVERSE',hsiar{i}.is_bp1nan_inverse);
         spcbp = spcbp+spc_shift;
-        plot(ax_spc,wv,spcbp,'x-',...
+        p = plot(ax_spc,wv,spcbp,'x-',...
                 'DisplayName',sprintf('BP - %s X:% 4d, Y:% 4d',legends{i},s,l));  
     end
     if ~isempty(hsiar{i}.GP1nan)
@@ -223,9 +226,14 @@ for i=1:nhsi
         'AVERAGE_WINDOW',ave_window_i,...
         'COEFF',hsiar{i}.GP1nan(:,s),'COEFF_INVERSE',hsiar{i}.is_gp1nan_inverse);
         spcgp = spcgp+spc_shift;
-        plot(ax_spc,wv,spcgp,'+-',...
+        p = plot(ax_spc,wv,spcgp,'+-',...
                 'DisplayName',sprintf('GP - %s X:% 4d, Y:% 4d',legends{i},s,l));  
     end
+    row2 = dataTipTextRow('bidx',1:length(wv));
+    p.DataTipTemplate.DataTipRows(end+1) = row2;
+    row = dataTipTextRow('band',bands_i);
+    p.DataTipTemplate.DataTipRows(end+1) = row;
+    
     spcList = [spcList;spc(~isnan(spc))];
     % spcminList = [spcminList nanmin(spc)]; spcmaxList = [spcmaxList nanmax(spc)];
 end
@@ -239,8 +247,17 @@ legend(ax_spc,'Location','northwest','Interpreter','none');
 if ~isempty(xlim1)
     xlim(ax_spc,xlim1);
 end
-[ ar_thed ] = hard_percentile_thresholding( spcList,0.01 );
-ylim(ax_spc,[min(ar_thed)*0.95 max(ar_thed)*1.05]);
+switch upper(mode_ylim)
+    case 'STRETCH01'
+        [ ar_thed ] = hard_percentile_thresholding( spcList,0.01 );
+    case 'NONE'
+        ar_thed = spcList(:);
+    otherwise
+        error('Undefined YLim Mode: %s',mode_ylim);
+end
+ar_thed_max = max(ar_thed); ar_thed_min = min(ar_thed);
+rg = ar_thed_max - ar_thed_min;
+ylim(ax_spc,[ar_thed_min-rg*0.05 ar_thed_max+rg*0.05]);
 % ylim(ax_spc,[nanmin(spcminList)*0.9 nanmax(spcmaxList)*1.1]);
 end
 
