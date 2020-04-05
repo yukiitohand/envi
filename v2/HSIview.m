@@ -45,21 +45,16 @@ classdef HSIview < handle
             end
             
             if iscell(hsiar)
-                if iscell(hsiar{1})
-                    obj.nhsi = length(hsiar);
-                    obj.hsiar = [];
-                    for i=1:obj.nhsi
-                        if iscell(hsiar{i})
-                            obj.hsiar = [obj.hsiar obj.parse_hsiar(hsiar{i})];
-                        elseif isa(hsiar{i},'HSI')
-                            obj.hsiar = [obj.hsiar obj.parse_hsiar({hsiar{i}})];
-                        else
-                            error('Input hsiar is not proper.');
-                        end
+                obj.nhsi = length(hsiar);
+                obj.hsiar = [];
+                for i=1:obj.nhsi
+                    if iscell(hsiar{i})
+                        obj.hsiar = [obj.hsiar obj.parse_hsiar(hsiar{i})];
+                    elseif isa(hsiar{i},'HSI')
+                        obj.hsiar = [obj.hsiar obj.parse_hsiar({hsiar{i}})];
+                    else
+                        error('Input hsiar is not proper.');
                     end
-                elseif isa(hsiar,'HSI')
-                    obj.nhsi = 1;
-                    obj.hsiar = obj.parse_hsiar({hsiar});
                 end
             end
             
@@ -121,6 +116,8 @@ classdef HSIview < handle
         end
         
         function [] = plot(obj,s,l)
+            cla(obj.obj_SpecView.ax);
+            hold(obj.obj_SpecView.ax,'on');
             for i=1:obj.nhsi
                 % get spectra
                 [spc,wv,bdxes] = obj.hsiar(i).hsi.get_spectrum(s,l,...
@@ -158,10 +155,10 @@ classdef HSIview < handle
 %                     spcbp = spcbp+obj.hsiar(i).spc_shift;
 %                     obj.obj_SpecView.plot({wv,spcgp,'x-',...
 %                             'DisplayName',sprintf('GP - %s X:% 4d, Y:% 4d',obj.hsiar(i).legend,s,l)});   
-%                 end
-                obj.obj_SpecView.set_xlim();
-                obj.obj_SpecView.set_ylim();
+%                 end    
             end
+            obj.obj_SpecView.set_xlim();
+            obj.obj_SpecView.set_ylim();
             
         end
         

@@ -145,21 +145,31 @@ classdef SpecView < handle
                     else
                         error('Specify Lim');
                     end
-                case {'AUTO','STRETCH01'}
+                case {'AUTO','TIGHT','STRETCH01'}
                     if ~isempty(varargin)
                         fprintf('Specified range does not have any effect\n');
                     end
                     spcList = [];
                     for i=1:length(obj.ax.Children)
                         if strcmp(obj.ax.Children(i).Type,'line')
-                            spcList = [spcList; ...
-                                obj.ax.Children(i).(prop_name_ax_Data)(:)];
+                            spci = obj.ax.Children(i).(prop_name_ax_Data);
+                            switch axisID
+                                case 'Y'
+                                    switch upper(obj.XLimMode)
+                                        case 'MANUAL'
+                                            xdata = obj.ax.Children(i).XData;
+                                            idx_active = and(obj.XLimMan(1)<xdata,xdata<obj.XLimMan(2));
+                                            spci = spci .* convertBoolTo1nan(idx_active);
+                                    end
+                            end
+                            
+                            spcList = [spcList; spci(:)];
                         end
                     end
                     switch upper(LIMMODE)
                         case 'STRETCH01'
                             [ ar_thed ] = hard_percentile_thresholding( spcList,0.01 );
-                        case 'AUTO'
+                        case {'AUTO','TIGHT'}
                             ar_thed = spcList(:);
                     end
                     ar_thed_max = max(ar_thed); ar_thed_min = min(ar_thed);
@@ -171,10 +181,6 @@ classdef SpecView < handle
                     error('Undefined Lim Mode: %s',LIMMODE);
             end
             
-        end
-        
-        function [] = cla(obj)
-            obj.ax.Children = [];
         end
         
     end
