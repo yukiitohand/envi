@@ -9,7 +9,7 @@ is_wa_band_inverse = false;
 is_img_band_inverse = false;
 is_bands_inverse = false;
 is_coeff_inverse = false;
-
+is_logarithmic = false;
 if (rem(length(varargin),2)==1)
     error('Optional parameters should always go by pairs');
 else
@@ -31,6 +31,8 @@ else
                 is_coeff_inverse = varargin{i+1};
             case 'BANDS_INVERSE'
                 is_bands_inverse = varargin{i+1};
+            case 'LOGARITMIC'
+                is_logarithmic = varargin{i+1};
             otherwise
                 error('Unrecognized option: %s', varargin{i});
         end
@@ -84,6 +86,10 @@ if isempty(hsi.img)
         sidx = 1;
         for ss = wdw_strt(2):wdw_end(2)
             spc_ll_ss = hsi.lazyEnviRead(ss,ll);
+            if is_logarithmic
+                spc_ll_ss(spc_ll_ss<0) = nan;
+                spc_ll_ss = log(spc_ll_ss);
+            end
             spc(lidx,sidx,:) = spc_ll_ss;
             sidx = sidx + 1;
         end
