@@ -45,15 +45,31 @@ classdef HSIview < handle
             end
             
             if iscell(hsiar)
-                obj.nhsi = length(hsiar);
-                obj.hsiar = [];
-                for i=1:obj.nhsi
-                    if iscell(hsiar{i})
-                        obj.hsiar = [obj.hsiar obj.parse_hsiar(hsiar{i})];
-                    elseif isa(hsiar{i},'HSI')
-                        obj.hsiar = [obj.hsiar obj.parse_hsiar({hsiar{i}})];
+                if length(hsiar)==1
+                    obj.nhsi = 1;
+                    if iscell(hsiar{1})
+                        obj.hsiar =  obj.parse_hsiar(hsiar{1});
+                    elseif isa(hsiar{1},'HSI')
+                        obj.hsiar = obj.parse_hsiar(hsiar);
                     else
                         error('Input hsiar is not proper.');
+                    end
+                elseif length(hsiar)>1
+                    if isa(hsiar{1},'HSI') && ~(isa(hsiar{2},'HSI') || iscell(hsiar{2}))
+                        obj.nhsi = 1;
+                        obj.hsiar = obj.parse_hsiar(hsiar);
+                    else
+                        obj.nhsi = length(hsiar);
+                        obj.hsiar = [];
+                        for i=1:obj.nhsi
+                            if iscell(hsiar{i})
+                                obj.hsiar = [obj.hsiar obj.parse_hsiar(hsiar{i})];
+                            elseif isa(hsiar{i},'HSI')
+                                obj.hsiar = [obj.hsiar obj.parse_hsiar({hsiar{i}})];
+                            else
+                                error('Input hsiar is not proper.');
+                            end
+                        end
                     end
                 end
             end
@@ -98,6 +114,9 @@ classdef HSIview < handle
                             hsiar_i_struct.spc_shift = hsiar_i_varargin{n+1};
                         case 'VARARGIN_PLOT'
                             hsiar_i_struct.varargin_plot = hsiar_i_varargin{n+1};
+                            if ~iscell(hsiar_i_struct.varargin_plot)
+                                hsiar_i_struct.varargin_plot = {hsiar_i_struct.varargin_plot};
+                            end
                         case 'LEGEND'
                             hsiar_i_struct.legends = hsiar_i_varargin{n+1};
                         otherwise
