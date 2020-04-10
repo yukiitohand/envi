@@ -13,6 +13,7 @@ classdef ImageStackView < handle
         image_pixel_sizes
         image_alpha_list
         image_visible_panel
+        image_visible_panel_chkbox_list
         image_control_panel
         transparency_value
         label
@@ -184,10 +185,10 @@ classdef ImageStackView < handle
             obj.image_visible_panel = uipanel(obj.fig,'FontSize',12,'Units','pixels');
             obj.image_visible_panel.Position = ivp_pos;
             
-            vis_chkbox_list = cell(1,Nim);
+            obj.image_visible_panel_chkbox_list = cell(1,Nim);
             for i=1:Nim
                 [ivp_chckbx_pos_i] = obj.get_visibility_checkbox_position(ivp_pos,i);
-                vis_chkbox_list{i} = uicontrol('Style','checkbox','Parent',obj.image_visible_panel,...
+                obj.image_visible_panel_chkbox_list{i} = uicontrol('Style','checkbox','Parent',obj.image_visible_panel,...
                     'Position',ivp_chckbx_pos_i,...
                     'String',obj.image_titles{i},'Value',true,'Callback',{@obj.change_image_visibility,i});
             end
@@ -195,7 +196,7 @@ classdef ImageStackView < handle
             
             for i=1:(Nim-1)
                 [ivp_ordchgbtn_pos_i] = obj.get_orderchange_btn_position(ivp_pos,i);
-                vis_chkbox_list{i} = uicontrol('Style','pushbutton','Parent',obj.image_visible_panel,...
+                vis_ordchgbtn_list{i} = uicontrol('Style','pushbutton','Parent',obj.image_visible_panel,...
                     'Position',ivp_ordchgbtn_pos_i,...
                     'String','>','FontSize',12,'Value',true,'Callback',{@obj.image_order_change,i},...
                     'Tag',num2str(i));
@@ -378,19 +379,25 @@ classdef ImageStackView < handle
         end
         
         function [] = image_order_change(obj,hObject,eventData,i)
-            
-            % first change the checkboxes
-            h_vis_chkbox_list = findobj(obj.image_visible_panel.Children,'Style','checkbox');
-            Nim = length(h_vis_chkbox_list);
-            pos_i = h_vis_chkbox_list(Nim-i+1).Position;
-            pos_ip1 = h_vis_chkbox_list(Nim-i).Position;
-
-            h_vis_chkbox_list(Nim-i+1).Position = pos_ip1;
-            h_vis_chkbox_list(Nim-i).Position = pos_i;
-
-            % change the image
+            % change the image arange order.
             uistack(obj.axim_list{obj.image_order(i+1)},'up');
+            
+            % change the checkbox positions
+            pos_i = obj.image_visible_panel_chkbox_list{obj.image_order(i)}.Position;
+            pos_ip1 = obj.image_visible_panel_chkbox_list{obj.image_order(i+1)}.Position;
+            
+            obj.image_visible_panel_chkbox_list{obj.image_order(i)}.Position = pos_ip1;
+            obj.image_visible_panel_chkbox_list{obj.image_order(i+1)}.Position = pos_i;
+            
+            % update image order
             obj.image_order([i,i+1]) = obj.image_order([i+1,i]);
+            
+            % Nim = length(obj.image_visible_panel_chkbox_list);
+            % for i=1:Nim
+            %     fprintf('%s, %s\n',obj.image_titles{obj.image_order(i)},...
+            %         obj.image_visible_panel_chkbox_list{obj.image_order(i)}.String);
+            % end
+
         end
         
         %-----------------------------------------------------------------%
