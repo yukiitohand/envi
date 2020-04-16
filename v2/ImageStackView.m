@@ -7,15 +7,17 @@ classdef ImageStackView < handle
         axim_master
         axim_list
         ax_plot
-        image_titles
+        image_info
+        image_names
         image_xranges
         image_yranges
         image_pixel_sizes
         image_alpha_list
         image_visible_panel
         image_visible_panel_chkbox_list
+        image_ordchgbtn_list
         image_control_panel
-        transparency_value
+        transparency_value_list
         label
         XY_COORDINATE_SYSTEM % NorthEast, PLANETOCENTRIC, IMAGEPIXELS
         image_order
@@ -27,18 +29,18 @@ classdef ImageStackView < handle
             %--------------------------------------------------------------
             % Parse Inputs
             %--------------------------------------------------------------
-            obj.image_titles = {};
+            obj.image_names = {};
             image_clims = {};
             xlim_val = [];
             ylim_val = [];
-            ydir = [];
+            ydir = 'normal';
             obj.XY_COORDINATE_SYSTEM = '';
             image_cursor_fcn = @obj.image_cursor;
             if ~isempty(varargin)
                 for i=1:2:length(varargin)
                     switch upper(varargin{i})
-                        case 'IMAGE_TITLES'
-                            obj.image_titles = varargin{i+1};
+                        case {'IMAGE_NAMES','IMAGE_TITLES'}
+                            obj.image_names = varargin{i+1};
                         case 'CLIM'
                             image_clims = varargin{i+1};
                         case 'XLIM'
@@ -62,8 +64,8 @@ classdef ImageStackView < handle
             %--------------------------------------------------------------
             Nim = length(image_list);
             
-            if isempty(obj.image_titles)
-                obj.image_titles = cellstr(num2str((1:Nim)','Image %03d'))';
+            if isempty(obj.image_names)
+                obj.image_names = cellstr(num2str((1:Nim)','Image %03d'))';
             end
             if isempty(image_clims), image_clims = cell(1,Nim); end
             
@@ -73,9 +75,9 @@ classdef ImageStackView < handle
             obj.image_pixel_sizes = nan(Nim,2);
             for i=1:Nim
                 image_listi = image_list{i};
-                [cdata,xdata,ydata,zdata] = parse_image_input(image_listi);
+                [size_cdata,xdata,ydata,zdata] = parse_image_input(image_listi);
                 [obj.image_xranges(i,:),obj.image_yranges(i,:),obj.image_pixel_sizes(i,:)] = ...
-                    get_image_lim(xdata,ydata,cdata);
+                    get_image_lim(xdata,ydata,size_cdata);
             end
             xlim_val_auto = [min(obj.image_xranges(:)) max(obj.image_xranges(:))];
             ylim_val_auto = [min(obj.image_yranges(:)) max(obj.image_yranges(:))];
@@ -128,6 +130,27 @@ classdef ImageStackView < handle
             set_figsize(obj.fig,w_fig_r,h_fig_r);
         end
         
+        function [image_input,image_name,clim,cmap] = parse_image_input(obj,image_input)
+            % a function to parse the ith component of image_list, and
+            % separate it into valid input variables for image/imagesc,
+            % image_name, clim, and cmap
+            is_image_input = true(1,length(image_input));
+            for i=1:length(image_input)
+                switch upper(image_input{i})
+                    case {'IMAGE_NAME','IMAGE_TITLE'}
+                        image_name = image_input{i+1};
+                        is_image_input([i i+1]) = false;
+                    case 'CLIM'
+                        clim = image_input{i+1};
+                        is_image_input([i i+1]) = false;
+                    case 'CMAP'
+                        cmap = image_input{i+1};
+                        is_image_input([i i+1]) = false;
+                end
+            end
+            image_input = image_input(is_image_input);
+        end
+        
         % Initialize the image axes
         function [] = init_image_axes(obj,axim_pos,image_list,Nim,image_clims,xlim_val,ylim_val,ydir)
             axim = axes('Parent',obj.fig);
@@ -152,7 +175,7 @@ classdef ImageStackView < handle
                 else
                     imobj = imagesc(image_list{iflip},'Parent',axi);
                 end
-                imobj.Tag = obj.image_titles{iflip};
+                imobj.Tag = obj.image_names{iflip};
                 obj.image_alpha_list{iflip} = imobj.AlphaData;
                 axis(axi,'off');
                 axi.XLim = obj.axim_master.XLim;
@@ -190,13 +213,13 @@ classdef ImageStackView < handle
                 [ivp_chckbx_pos_i] = obj.get_visibility_checkbox_position(ivp_pos,i);
                 obj.image_visible_panel_chkbox_list{i} = uicontrol('Style','checkbox','Parent',obj.image_visible_panel,...
                     'Position',ivp_chckbx_pos_i,...
-                    'String',obj.image_titles{i},'Value',true,'Callback',{@obj.change_image_visibility,i});
+                    'String',obj.image_names{i},'Value',true,'Callback',{@obj.change_image_visibility,i});
             end
             
-            
+            obj.image_ordchgbtn_list = cell(1,Nim-1);
             for i=1:(Nim-1)
                 [ivp_ordchgbtn_pos_i] = obj.get_orderchange_btn_position(ivp_pos,i);
-                vis_ordchgbtn_list{i} = uicontrol('Style','pushbutton','Parent',obj.image_visible_panel,...
+                obj.image_ordchgbtn_list{i} = uicontrol('Style','pushbutton','Parent',obj.image_visible_panel,...
                     'Position',ivp_ordchgbtn_pos_i,...
                     'String','>','FontSize',12,'Value',true,'Callback',{@obj.image_order_change,i},...
                     'Tag',num2str(i));
@@ -209,8 +232,8 @@ classdef ImageStackView < handle
             obj.image_control_panel = uipanel(obj.fig,'FontSize',12,'Units','pixels');
             obj.image_control_panel.Position = icp_pos;
             imsel_image_control_panel = uicontrol('Style','popupmenu','Parent',obj.image_control_panel ,...
-                'String',obj.image_titles,'Value',1,'Callback',{@obj.ImageChanged_image_control_panel});
-             imsel_image_control_panel.Position = [5,obj.image_control_panel.Position(4)-30,...
+                'String',obj.image_names,'Value',1,'Callback',{@obj.ImageChanged_image_control_panel});
+            imsel_image_control_panel.Position = [5,obj.image_control_panel.Position(4)-30,...
                 100,imsel_image_control_panel.Position(4)];
             
             % clim controller
@@ -272,7 +295,7 @@ classdef ImageStackView < handle
             text_transparency.Position = [slider_transparency.Position(1)+slider_transparency.Position(3)+5,...
                 10,50,text_transparency.Position(4)];
 
-            obj.transparency_value = ones(1,Nim);
+            obj.transparency_value_list = ones(1,Nim);
         end
         
         %%
@@ -312,10 +335,109 @@ classdef ImageStackView < handle
         end
         
         function [ivp_chckbx_pos] = get_visibility_checkbox_position(obj,ivp_pos,im_id)
-            ivp_chckbx_pos = [30,ivp_pos(4)-10-22*im_id,100,22];
+            ivp_chckbx_pos = [30,ivp_pos(4)-10-22*im_id,150,22];
         end
         function [ivp_chckbx_pos] = get_orderchange_btn_position(obj,ivp_pos,im_id)
             ivp_chckbx_pos = [10,ivp_pos(4)-17-22*im_id,15,15];
+        end
+        
+        function [icp_children] = get_icp_children(obj)
+            icp_children = [];
+            for i=1:length(obj.image_control_panel.Children)
+                switch obj.image_control_panel.Children(i).Style
+                    case 'edit'
+                        switch lower(obj.image_control_panel.Children(i).Tag)
+                            case 'text_transparency'
+                                icp_children.text_transparency = obj.image_control_panel.Children(i);
+                            case 'climmin'
+                                icp_children.clim_min_input = obj.image_control_panel.Children(i);
+                            case 'climmax'
+                                icp_children.clim_min_input = obj.image_control_panel.Children(i);
+                            case 'cmap'
+                                icp_children.cmap_input = obj.image_control_panel.Children(i);
+                        end
+                    case 'slider'
+                        icp_children.slider_transparency = obj.image_control_panel.Children(i);
+                    case 'popupmenu'
+                        icp_children.imsel_image_control_panel = obj.image_control_panel.Children(i);
+                end
+            end
+        end
+        
+        function [] = add_layer(obj,image_list,varargin)
+            image_name = '';
+            if ~isempty(varargin)
+                for i=1:2:length(varargin)
+                    switch upper(varargin{i})
+                        case {'IMAGE_NAMES','IMAGE_TITLES'}
+                            image_name = varargin{i+1};
+                        otherwise
+                            error('Unrecognized option: %s', varargin{i});
+                    end
+                end
+            end
+            if isempty(image_name)
+                i=1;
+                while ~isempty(image_name)
+                    image_name_tmp = sprintf('Image %03d',i);
+                    if any(strcmpi(image_name_tmp,obj.image_names))
+                        i = i+1;
+                    else
+                        image_name = image_name_tmp;
+                    end
+                end
+            end
+            
+            Nim = length(obj.image_names);
+            
+            % add image to properties
+            
+            % add the image to image axes
+            obj.add_axim(image_list,image_name);
+            
+            % add the image to image_visible_panel
+            
+            % add the image to image_control_panel
+
+            
+            
+        end
+        
+        function remove_layer(obj,image_name)
+            idx = find(strcmpi(image_name,obj.image_names));
+            Nim = length(obj.image_names);
+            idx_c = setdiff(1:Nim,idx);
+            
+            % remove the image from image axes
+            delete(obj.axim_list(idx));
+            
+            % remove the image from properties
+            obj.axim_list = obj.axim_list(idx_c);
+            obj.image_names = obj.image_names(idx_c);
+            obj.image_xranges = obj.image_xranges(idx_c,:);
+            obj.image_yranges = obj.image_yranges(idx_c,:);
+            obj.image_pixel_sizes = obj.image_pixel_sizes(idx_c,:);
+            obj.image_alpha_list = obj.image_alpha_list(idx_c);
+            obj.transparency_value_list = obj.transparency_value_list(idx_c);
+            image_order_idx = obj.image_order(idx);
+            obj.image_order = obj.image_order(idx_c);
+            obj.image_order(obj.image_order>image_order_idx) = obj.image_order(obj.image_order>image_order_idx) - 1;
+            
+            % remove the image from the image control panel
+            [icp_children] = obj.get_icp_children();
+            icp_children.imsel_image_control_panel.String = obj.image_names;
+            if imsel_image_control_panel.Value == idx
+                icp_children.imsel_image_control_panel.Value = 1;
+                obj.ImageChanged_image_control_panel(icp_children.imsel_image_control_panel,[]);
+            end
+            
+            % remove the image from the image visible panel
+            delete(obj.image_visible_panel_chkbox_list{idx});
+            delete(obj.image_ordchgbtn_list{Nim-1});
+            
+            
+            % what will do with the image xy lims??
+            
         end
         
         %%
@@ -394,7 +516,7 @@ classdef ImageStackView < handle
             
             % Nim = length(obj.image_visible_panel_chkbox_list);
             % for i=1:Nim
-            %     fprintf('%s, %s\n',obj.image_titles{obj.image_order(i)},...
+            %     fprintf('%s, %s\n',obj.image_names{obj.image_order(i)},...
             %         obj.image_visible_panel_chkbox_list{obj.image_order(i)}.String);
             % end
 
@@ -405,140 +527,145 @@ classdef ImageStackView < handle
         %-----------------------------------------------------------------%
         % Change the image for which properties are controlled.
         function [] = ImageChanged_image_control_panel(obj,hObject,eventData)
-            for i=1:length(obj.image_control_panel.Children)
-                switch obj.image_control_panel.Children(i).Style
-                    case 'edit'
-                        switch lower(obj.image_control_panel.Children(i).Tag)
-                            case 'text_transparency'
-                                text_transparency = obj.image_control_panel.Children(i);
-                            case 'climmin'
-                                clim_min_input = obj.image_control_panel.Children(i);
-                            case 'climmax'
-                                clim_max_input = obj.image_control_panel.Children(i);
-                            case 'cmap'
-                                cmap_input = obj.image_control_panel.Children(i);
-                        end
-                    case 'slider'
-                        slider_transparency = obj.image_control_panel.Children(i);
-                    case 'popupmenu'
-                        imsel_image_control_panel = obj.image_control_panel.Children(i);
-                end
-            end
+            [icp_children] = obj.get_icp_children();
+%             for i=1:length(obj.image_control_panel.Children)
+%                 switch obj.image_control_panel.Children(i).Style
+%                     case 'edit'
+%                         switch lower(obj.image_control_panel.Children(i).Tag)
+%                             case 'text_transparency'
+%                                 text_transparency = obj.image_control_panel.Children(i);
+%                             case 'climmin'
+%                                 clim_min_input = obj.image_control_panel.Children(i);
+%                             case 'climmax'
+%                                 clim_max_input = obj.image_control_panel.Children(i);
+%                             case 'cmap'
+%                                 cmap_input = obj.image_control_panel.Children(i);
+%                         end
+%                     case 'slider'
+%                         slider_transparency = obj.image_control_panel.Children(i);
+%                     case 'popupmenu'
+%                         imsel_image_control_panel = obj.image_control_panel.Children(i);
+%                 end
+%             end
             
             id_im = hObject.Value;
-            slider_transparency.Value = obj.transparency_value(id_im);
-            text_transparency.String = num2str(slider_transparency.Value);
-            clim_min_input.String = num2str(obj.axim_list{id_im}.CLim(1));
-            clim_max_input.String = num2str(obj.axim_list{id_im}.CLim(2));
-            cmap_input.String = colormap(obj.axim_list{id_im});
+            icp_children.slider_transparency.Value = obj.transparency_value_list(id_im);
+            icp_children.text_transparency.String = num2str(slider_transparency.Value);
+            icp_children.clim_min_input.String = num2str(obj.axim_list{id_im}.CLim(1));
+            icp_children.clim_max_input.String = num2str(obj.axim_list{id_im}.CLim(2));
+            icp_children.cmap_input.String = colormap(obj.axim_list{id_im});
             
         end
         
         function [] = CMap_Changed(obj,hObject,eventData)
-            for i=1:length(obj.image_control_panel.Children)
-                switch obj.image_control_panel.Children(i).Style
-                    case 'edit'
-                        switch lower(obj.image_control_panel.Children(i).Tag)
-                            case 'text_transparency'
-                                text_transparency = obj.image_control_panel.Children(i);
-                            case 'climmin'
-                                clim_min_input = obj.image_control_panel.Children(i);
-                            case 'climmax'
-                                clim_max_input = obj.image_control_panel.Children(i);
-                            case 'cmap'
-                                cmap_input = obj.image_control_panel.Children(i);
-                        end
-                    case 'slider'
-                        slider_transparency = obj.image_control_panel.Children(i);
-                    case 'popupmenu'
-                        imsel_image_control_panel = obj.image_control_panel.Children(i);
-                end
-            end
+            [icp_children] = obj.get_icp_children();
+%             for i=1:length(obj.image_control_panel.Children)
+%                 switch obj.image_control_panel.Children(i).Style
+%                     case 'edit'
+%                         switch lower(obj.image_control_panel.Children(i).Tag)
+%                             case 'text_transparency'
+%                                 text_transparency = obj.image_control_panel.Children(i);
+%                             case 'climmin'
+%                                 clim_min_input = obj.image_control_panel.Children(i);
+%                             case 'climmax'
+%                                 clim_max_input = obj.image_control_panel.Children(i);
+%                             case 'cmap'
+%                                 cmap_input = obj.image_control_panel.Children(i);
+%                         end
+%                     case 'slider'
+%                         slider_transparency = obj.image_control_panel.Children(i);
+%                     case 'popupmenu'
+%                         imsel_image_control_panel = obj.image_control_panel.Children(i);
+%                 end
+%             end
             
-            id_im = imsel_image_control_panel.Value;
+            id_im = icp_children.imsel_image_control_panel.Value;
             colormap(obj.axim_list{id_im},hObject.String);
             
         end
         
         % Controll the transparency of the image: TEXT INPUT
         function [] = ValueChanged_transparency_slider(obj,hObject,eventData)
-            for i=1:length(obj.image_control_panel.Children)
-                switch obj.image_control_panel.Children(i).Style
-                    case 'edit'
-                        switch lower(obj.image_control_panel.Children(i).Tag)
-                            case 'text_transparency'
-                                text_transparency = obj.image_control_panel.Children(i);
-                            case 'climmin'
-                                clim_min_input = obj.image_control_panel.Children(i);
-                            case 'climmax'
-                                clim_min_input = obj.image_control_panel.Children(i);
-                        end
-                    case 'slider'
-                        slider_transparency = obj.image_control_panel.Children(i);
-                    case 'popupmenu'
-                        imsel_image_control_panel = obj.image_control_panel.Children(i);
-                end
-            end
+            [icp_children] = obj.get_icp_children();
+%             for i=1:length(obj.image_control_panel.Children)
+%                 switch obj.image_control_panel.Children(i).Style
+%                     case 'edit'
+%                         switch lower(obj.image_control_panel.Children(i).Tag)
+%                             case 'text_transparency'
+%                                 text_transparency = obj.image_control_panel.Children(i);
+%                             case 'climmin'
+%                                 clim_min_input = obj.image_control_panel.Children(i);
+%                             case 'climmax'
+%                                 clim_min_input = obj.image_control_panel.Children(i);
+%                         end
+%                     case 'slider'
+%                         slider_transparency = obj.image_control_panel.Children(i);
+%                     case 'popupmenu'
+%                         imsel_image_control_panel = obj.image_control_panel.Children(i);
+%                 end
+%             end
             
-            text_transparency.String = num2str(hObject.Value);
-            id_im = imsel_image_control_panel.Value;
+            icp_children.text_transparency.String = num2str(hObject.Value);
+            id_im = icp_children.imsel_image_control_panel.Value;
             obj.axim_list{id_im}.Children.AlphaData = hObject.Value.*obj.image_alpha_list{id_im};      
-            obj.transparency_value(id_im) = hObject.Value;
+            obj.transparency_value_list(id_im) = hObject.Value;
             
         end
         
         % Controll the transparency of the image: SLIDER INPUT
         function [] = TextStringChanged_transparency_slider(obj,hObject,eventData)
-            for i=1:length(obj.image_control_panel.Children)
-                switch obj.image_control_panel.Children(i).Style
-                    case 'edit'
-                        switch lower(obj.image_control_panel.Children(i).Tag)
-                            case 'text_transparency'
-                                text_transparency = obj.image_control_panel.Children(i);
-                            case 'climmin'
-                                clim_min_input = obj.image_control_panel.Children(i);
-                            case 'climmax'
-                                clim_min_input = obj.image_control_panel.Children(i);
-                        end
-                    case 'slider'
-                        slider_transparency = obj.image_control_panel.Children(i);
-                    case 'popupmenu'
-                        imsel_image_control_panel = obj.image_control_panel.Children(i);
-                end
-            end
+            [icp_children] = obj.get_icp_children();
+%             for i=1:length(obj.image_control_panel.Children)
+%                 switch obj.image_control_panel.Children(i).Style
+%                     case 'edit'
+%                         switch lower(obj.image_control_panel.Children(i).Tag)
+%                             case 'text_transparency'
+%                                 text_transparency = obj.image_control_panel.Children(i);
+%                             case 'climmin'
+%                                 clim_min_input = obj.image_control_panel.Children(i);
+%                             case 'climmax'
+%                                 clim_min_input = obj.image_control_panel.Children(i);
+%                         end
+%                     case 'slider'
+%                         slider_transparency = obj.image_control_panel.Children(i);
+%                     case 'popupmenu'
+%                         imsel_image_control_panel = obj.image_control_panel.Children(i);
+%                 end
+%             end
             
             v = str2double(hObject.String);
             if isnan(v)
                 error('Input value is invalid');
             end
-            slider_transparency.Value = v;
-            id_im = imsel_image_control_panel.Value;
+            icp_children.slider_transparency.Value = v;
+            id_im = icp_children.imsel_image_control_panel.Value;
             obj.axim_list{id_im}.Children.AlphaData =  v .* obj.image_alpha_list{id_im};   
-            obj.transparency_value(id_im) = v;
+            obj.transparency_value_list(id_im) = v;
             
         end
         
         % Controll CLim of the image
         function [] = CLim_Value_changed(obj,hObject,eventData,climidx)
-            for i=1:length(obj.image_control_panel.Children)
-                switch obj.image_control_panel.Children(i).Style
-                    case 'edit'
-                        switch lower(obj.image_control_panel.Children(i).Tag)
-                            case 'text_transparency'
-                                text_transparency = obj.image_control_panel.Children(i);
-                            case 'climmin'
-                                clim_min_input = obj.image_control_panel.Children(i);
-                            case 'climmax'
-                                clim_min_input = obj.image_control_panel.Children(i);
-                        end
-                    case 'slider'
-                        slider_transparency = obj.image_control_panel.Children(i);
-                    case 'popupmenu'
-                        imsel_image_control_panel = obj.image_control_panel.Children(i);
-                end
-            end
+            [icp_children] = obj.get_icp_children();
+%             for i=1:length(obj.image_control_panel.Children)
+%                 switch obj.image_control_panel.Children(i).Style
+%                     case 'edit'
+%                         switch lower(obj.image_control_panel.Children(i).Tag)
+%                             case 'text_transparency'
+%                                 text_transparency = obj.image_control_panel.Children(i);
+%                             case 'climmin'
+%                                 clim_min_input = obj.image_control_panel.Children(i);
+%                             case 'climmax'
+%                                 clim_min_input = obj.image_control_panel.Children(i);
+%                         end
+%                     case 'slider'
+%                         slider_transparency = obj.image_control_panel.Children(i);
+%                     case 'popupmenu'
+%                         imsel_image_control_panel = obj.image_control_panel.Children(i);
+%                 end
+%             end
             v = str2double(hObject.String);
-            id_im = imsel_image_control_panel.Value;
+            id_im = icp_children.imsel_image_control_panel.Value;
             obj.axim_list{id_im}.CLim(climidx) = v;
             
         end
@@ -564,10 +691,10 @@ classdef ImageStackView < handle
                 end
                 if length(val)==1
                     output_txt{end+1} = sprintf('%10s\n (% 6d, % 6d) : % 8.5f',...
-                            obj.image_titles{i},x_imi,y_imi,val);
+                            obj.image_names{i},x_imi,y_imi,val);
                 elseif length(val)==3
                     output_txt{end+1} = sprintf('%10s\n (% 6d, % 6d) : (% 5.5f % 5.5f % 5.5f)',...
-                            obj.image_titles{i},x_imi,y_imi,val(1),val(2),val(3));
+                            obj.image_names{i},x_imi,y_imi,val(1),val(2),val(3));
                 end
             end
         end

@@ -74,7 +74,10 @@ classdef HSIview < handle
                 end
             end
             
-            obj.init_ImageStackView({rgb},...
+            if isnumeric(rgb) || islogical(rgb)
+                rgb = {rgb};
+            end
+            obj.init_ImageStackView(rgb,...
                 'IMAGE_CURSOR_FCN',{@obj.image_cursorHSI},...
                 varargin_ImageStackView{:});
             
