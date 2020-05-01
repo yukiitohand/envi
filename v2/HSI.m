@@ -172,6 +172,11 @@ classdef HSI < handle
             obj.GP1nan = GP1nan;
             obj.is_gp1nan_inverse = is_gp1nan_inverse;
         end
+        
+        function [] = fopen_img(obj)
+            obj.fid_img = fopen(obj.imgpath,'r');
+        end
+        
         function [] = fclose_img(obj)
             fclose(obj.fid_img);
             obj.fid_img = -1;
