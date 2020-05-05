@@ -21,6 +21,10 @@ classdef ImageStackView < handle
         YLimHomeMan
         XLimHomeAuto
         YLimHomeAuto
+        
+        custom_image_cursor_fcn
+        
+        
     end
     
     methods
@@ -35,7 +39,7 @@ classdef ImageStackView < handle
             obj.YLimHomeMan = [];
             ydir = 'normal';
             obj.XY_COORDINATE_SYSTEM = '';
-            image_cursor_fcn = @obj.image_cursor;
+            obj.custom_image_cursor_fcn = @obj.image_cursor;
             if ~isempty(varargin)
                 for i=1:2:length(varargin)
                     switch upper(varargin{i})
@@ -52,7 +56,7 @@ classdef ImageStackView < handle
                         case 'XY_COORDINATE_SYSTEM'
                             obj.XY_COORDINATE_SYSTEM = varargin{i+1};
                         case 'IMAGE_CURSOR_FCN'
-                            image_cursor_fcn = varargin{i+1};
+                            obj.custom_image_cursor_fcn = varargin{i+1};
                         otherwise
                             error('Unrecognized option: %s', varargin{i});
                     end
@@ -70,32 +74,34 @@ classdef ImageStackView < handle
             %--------------------------------------------------------------
             % Load images
             %--------------------------------------------------------------
-            if iscell(image_list)
-                metainfo_image_input = [];
-                for i=1:length(image_list)
-                    metainfo_image_input(i).class = class(image_list{i});
-                    metainfo_image_input(i).size  =  size(image_list{i});
-                    if strcmpi(metainfo_image_input(i).class,'char')
-                        metainfo_image_input(i).char = image_list{i};
-                    else
-                        metainfo_image_input(i).char = '';
+            if ~isempty(image_list)
+                if iscell(image_list)
+                    metainfo_image_input = [];
+                    for i=1:length(image_list)
+                        metainfo_image_input(i).class = class(image_list{i});
+                        metainfo_image_input(i).size  =  size(image_list{i});
+                        if strcmpi(metainfo_image_input(i).class,'char')
+                            metainfo_image_input(i).char = image_list{i};
+                        else
+                            metainfo_image_input(i).char = '';
+                        end
                     end
-                end
-                [i_cdata,i_xdata,i_ydata,i_zdata,i_image_varargin]...
-                    = parse_metainfo_image_input(metainfo_image_input);
-                if isempty(i_cdata)
-                    Nim = length(image_list);
-                    for i=1:Nim
-                        iflip = Nim-i+1;
-                        obj.add_layer(image_list{iflip});   
+                    [i_cdata,i_xdata,i_ydata,i_zdata,i_image_varargin]...
+                        = parse_metainfo_image_input(metainfo_image_input);
+                    if isempty(i_cdata)
+                        Nim = length(image_list);
+                        for i=1:Nim
+                            iflip = Nim-i+1;
+                            obj.add_layer(image_list{iflip});   
+                        end
+                    else
+                        % Nim = 1;
+                        obj.add_layer(image_list);  
                     end
                 else
                     % Nim = 1;
-                    obj.add_layer(image_list);  
+                    obj.add_layer(image_list);
                 end
-            else
-                % Nim = 1;
-                obj.add_layer(image_list);
             end
             
             
@@ -121,9 +127,9 @@ classdef ImageStackView < handle
             % Set up callback functions
             %--------------------------------------------------------------
             % image cursor
-            hdt = datacursormode(obj.fig);
-            hdt.Interpreter = 'none';
-            set(hdt,'UpdateFcn',image_cursor_fcn);
+            % hdt = datacursormode(obj.fig);
+            % hdt.Interpreter = 'none';
+            % set(hdt,'UpdateFcn',image_cursor_fcn);
             
         end
         
@@ -135,8 +141,8 @@ classdef ImageStackView < handle
         % Initialize the main figure window
         function [imp_pos,axim_pos,ivp_pos,icp_pos] = init_Figure(obj)
             obj.fig = figure('Visible',0);
-            w_fig = 800;
-            h_fig = 800;
+            w_fig = 600;
+            h_fig = 600;
             aspectR = 1;
             [imp_pos,axim_pos,ivp_pos,icp_pos,w_fig_r,h_fig_r] = obj.get_resizePosition(...
                  w_fig,h_fig,aspectR);
@@ -153,11 +159,43 @@ classdef ImageStackView < handle
             obj.axim_master = axes('Parent',obj.image_panel);
             obj.axim_master.Units = 'pixels';
             obj.axim_master.Position = axim_pos;
+            obj.axim_master.DataAspectRatioMode = 'manual';
             obj.axim_master.DataAspectRatio = [1,1,1];
             obj.axim_master.YDir = ydir;
             obj.axim_master.Color = 'none';
             obj.set_custom_axim_toolbar(obj.axim_master);
-            box(obj.axim_master,'on');
+            obj.axim_master.Box = 1;
+            obj.axim_master.NextPlot = 'replacechildren';
+            
+            obj.XLimHomeAuto = [0 1];
+            obj.YLimHomeAuto = [0 1];
+            
+            obj.ax_plot = axes('Parent',obj.image_panel);
+            obj.ax_plot.Units = 'pixels';
+            obj.ax_plot.Position = obj.axim_master.Position;
+            obj.ax_plot.DataAspectRatioMode = 'manual';
+            obj.ax_plot.DataAspectRatio = [1,1,1];
+            obj.ax_plot.XLim = obj.axim_master.XLim;
+            obj.ax_plot.YLim = obj.axim_master.YLim;
+            obj.ax_plot.YDir = obj.axim_master.YDir;
+            obj.ax_plot.PickableParts = 'all';
+            obj.ax_plot.Color = 'none';
+            obj.ax_plot.XTick = [];
+            obj.ax_plot.YTick = [];
+            obj.ax_plot.XAxis.Visible = 0;
+            obj.ax_plot.YAxis.Visible = 0;
+            obj.set_custom_axim_toolbar(obj.ax_plot);
+            obj.ax_plot.Box = 0;
+            set(obj.ax_plot,'ButtonDownFcn',@obj.custom_image_cursor_fcn);
+            obj.ax_plot.NextPlot = 'replacechildren';
+            
+            hlink = linkprop([obj.axim_master obj.ax_plot],...
+                {'DataAspectRatio','PlotBoxAspectRatio','XLim','YLim','Position','YDir'});
+            setappdata(obj.image_panel,'HLink',hlink);
+            
+            
+
+            
         end
         
         
@@ -390,9 +428,8 @@ classdef ImageStackView < handle
         function add_layer(obj,image_input)
             isvimage_obj = ISVImage(image_input,obj);
             
-            linkaxes([obj.axim_master isvimage_obj.ax],'xy');
-            hlink = linkprop([obj.axim_master isvimage_obj.ax],'Position');
-            hlink = linkprop([obj.axim_master isvimage_obj.ax],'YDir');
+            hlink = getappdata(obj.image_panel,'HLink');
+            addtarget(hlink,isvimage_obj.ax);
             
             Nim = length(obj.image);
             
@@ -459,6 +496,7 @@ classdef ImageStackView < handle
             m1 = uimenu(cm,'Text','Remove','MenuSelectedFcn',{@obj.VisChkbx_Menu_remove_layer,isvimage_obj});
             % m1.MenuSelectedFcn = {@obj.remove_layer,isvimage_obj};
             isvimage_obj.ui_checkbox_visbility.ContextMenu = cm;
+            isvimage_obj.ax.NextPlot = 'add';
             
             % add order change button
             i_oc = Nim;
@@ -480,7 +518,12 @@ classdef ImageStackView < handle
             obj.Update_ImageAxes_LimHomeAuto();
             obj.Update_ImageAxes_LimHome();
             
+            isvimage_obj.ax.DataAspectRatio = [1,1,1];
+            
             obj.set_custom_axim_toolbar(isvimage_obj.ax);
+            set(isvimage_obj.ax,'ButtonDownFcn',@obj.custom_image_cursor_fcn);
+            
+            uistack(obj.ax_plot,'top');
             
         end
         
@@ -804,11 +847,14 @@ classdef ImageStackView < handle
         % Image Cursor Callback function
         %-----------------------------------------------------------------%
         function [output_txt] = image_cursor(obj,hObject,eventData)
-            pos = get(eventData,'Position');
+            pos = eventData.IntersectionPoint;
             x = pos(1); y = pos(2);
+            p = obj.plot(x,y,'Marker','none');
             % im = get(event_obj,'Target');
             output_txt = {['X: ',sprintf('%6.4f',x)],...
                 ['Y: ',sprintf('%6.4f',y)]};
+            
+            dt = datatip(p,x,y);
             
             Nim = length(obj.image);
             for i=1:Nim
@@ -834,26 +880,35 @@ classdef ImageStackView < handle
         % Plot the image from the outside of the ImageStackView class
         % Create a top layer ax for plotting if it isn't initilized.
         %-----------------------------------------------------------------%
+        function [imobj] = imagesc_overlay(obj,varargin)
+            % hold(obj.ax_plot,'all');
+            % xlim_tmp = obj.axim_master.XLim;
+            % ylim_tmp = obj.axim_master.YLim;
+            % ydir = obj.axim_master.YDir;
+            imobj = imagesc(obj.ax_plot,varargin{:});
+            set(imobj,'ButtonDownFcn',obj.ax_plot.ButtonDownFcn);
+            % obj.ax_plot.XLim = xlim_tmp;
+            % obj.ax_plot.YLim = ylim_tmp;
+            % obj.ax_plot.YDir = ydir;
+            % obj.ax_plot.Color = 'none';
+            % obj.ax_plot.DataAspectRatio = [1,1,1];
+            % obj.set_custom_axim_toolbar(obj.ax_plot);
+            % set(obj.ax_plot,'ButtonDownFcn',@obj.custom_image_cursor_fcn);
+        end
+            
         function [p] = plot(obj,varargin)
-            if isempty(obj.ax_plot)
-                obj.ax_plot = axes('Parent',obj.fig);
-                obj.ax_plot.Units = 'pixels';
-                obj.ax_plot.DataAspectRatio = [1,1,1];
-                obj.ax_plot.Position = obj.axim_master.Position;
-                obj.ax_plot.XLim = obj.axim_master.XLim;
-                obj.ax_plot.YLim = obj.axim_master.YLim;
-                obj.ax_plot.Color = 'none';
-                obj.ax_plot.XTick = [];
-                obj.ax_plot.YTick = [];
-                
-                linkaxes([obj.axim_master cat(2,obj.axim_list{:}) obj.ax_plot],'xy');
-                hlink_p = linkprop([obj.axim_master cat(2,obj.axim_list{:}) obj.ax_plot],'Position');
-            end
-            
+            % xlim_tmp = obj.axim_master.XLim;
+            % ylim_tmp = obj.axim_master.YLim;
+            % ydir = obj.axim_master.YDir;
             p = plot(obj.ax_plot,varargin{:});
+            % obj.ax_plot.XLim = xlim_tmp;
+            % obj.ax_plot.YLim = ylim_tmp;
+            % obj.ax_plot.YDir = ydir;
+            % obj.ax_plot.Color = 'none';
+            % obj.ax_plot.DataAspectRatio = [1,1,1];
+            % obj.set_custom_axim_toolbar(obj.ax_plot);
+            % set(obj.ax_plot,'ButtonDownFcn',@obj.custom_image_cursor_fcn);
             
-            obj.ax_plot.XLim = obj.axim_master.XLim;
-            obj.ax_plot.YLim = obj.axim_master.YLim;
             
         end  
         
