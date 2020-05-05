@@ -38,7 +38,7 @@ classdef ImageStackView < handle
             obj.XLimHomeMan = [];
             obj.YLimHomeMan = [];
             ydir = 'normal';
-            obj.XY_COORDINATE_SYSTEM = '';
+            obj.XY_COORDINATE_SYSTEM = 'IMAGEPIXELS';
             obj.custom_image_cursor_fcn = @obj.image_cursor;
             if ~isempty(varargin)
                 for i=1:2:length(varargin)
@@ -54,7 +54,7 @@ classdef ImageStackView < handle
                         case 'YDIR'
                             ydir = varargin{i+1};
                         case 'XY_COORDINATE_SYSTEM'
-                            obj.XY_COORDINATE_SYSTEM = varargin{i+1};
+                            obj.XY_COORDINATE_SYSTEM = upper(varargin{i+1});
                         case 'IMAGE_CURSOR_FCN'
                             obj.custom_image_cursor_fcn = varargin{i+1};
                         otherwise
@@ -846,15 +846,27 @@ classdef ImageStackView < handle
         %-----------------------------------------------------------------%
         % Image Cursor Callback function
         %-----------------------------------------------------------------%
-        function [output_txt] = image_cursor(obj,hObject,eventData)
+        function image_cursor(obj,hObject,eventData)
             pos = eventData.IntersectionPoint;
             x = pos(1); y = pos(2);
-            p = obj.plot(x,y,'Marker','none');
             % im = get(event_obj,'Target');
-            output_txt = {['X: ',sprintf('%6.4f',x)],...
-                ['Y: ',sprintf('%6.4f',y)]};
+            switch obj.XY_COORDINATE_SYSTEM
+                case 'NORTHEAST'
+                    xy_format = '%6.4f';
+                    xy_str = '(eating, northing)';
+                case 'PLANETOCENTRIC'
+                    xy_str = '(latitude, pltc longitude)';
+                case 'IMAGEPIXELS'
+                    x = round(x); y = round(y);
+                    xy_format = '% 6d';
+                    xy_str = '(x, y)';
+            end
+            p = obj.plot(x,y,'Marker','none');
+            expr = [xy_str ' = ' sprintf(['(' xy_format ',' xy_format ')'],x,y)];
+            p.DataTipTemplate.DataTipRows(1).Label = expr;
+            p.DataTipTemplate.DataTipRows(1).Value = '';
+            p.DataTipTemplate.DataTipRows(1).Format = '%s';
             
-            dt = datatip(p,x,y);
             
             Nim = length(obj.image);
             for i=1:Nim
@@ -867,13 +879,22 @@ classdef ImageStackView < handle
                     x_imi = nan; y_imi = nan; val = nan;
                 end
                 if length(val)==1
-                    output_txt{end+1} = sprintf('%10s\n (% 6d, % 6d) : % 8.5f',...
-                            obj.image(i).name,x_imi,y_imi,val);
+                    % output_txt{end+1} = sprintf('%10s\n (% 6d, % 6d) : % 8.5f',...
+                    %         obj.image(i).name,x_imi,y_imi,val);
+                    expr = sprintf('%s\n (% 6d, % 6d) : % 8.5f',obj.image(i).name,x_imi,y_imi,val);
+                    row = dataTipTextRow(expr,'','%s');
                 elseif length(val)==3
-                    output_txt{end+1} = sprintf('%10s\n (% 6d, % 6d) : (% 5.5f % 5.5f % 5.5f)',...
+                    % output_txt{end+1} = sprintf('%10s\n (% 6d, % 6d) : (% 5.5f % 5.5f % 5.5f)',...
+                    %         obj.image(i).name,x_imi,y_imi,val(1),val(2),val(3));
+                    expr = sprintf('%s\n (% 6d, % 6d) : (% 5.5f % 5.5f % 5.5f)',...
                             obj.image(i).name,x_imi,y_imi,val(1),val(2),val(3));
+                    row = dataTipTextRow(expr,'','%s');
                 end
+                p.DataTipTemplate.DataTipRows(1+i) = row;
             end
+            
+            dt = datatip(p,x,y);
+            
         end
         
         %-----------------------------------------------------------------%
