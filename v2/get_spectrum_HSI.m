@@ -74,9 +74,9 @@ if ~isempty(hsi.wa)
         wv = flip(wv,1);
     end
 elseif isfield(hsi.hdr,'wavelength')
-    wv = hsi.hdr.wavelength;
+    wv = hsi.hdr.wavelength(:);
 else
-    wv = 1:hsi.hdr.bands; % band is returned when no information for wavelength
+    wv = reshape(1:hsi.hdr.bands,[],1); % band is returned when no information for wavelength
 end
 
 if isempty(hsi.img)
