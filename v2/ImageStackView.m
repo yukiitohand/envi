@@ -22,6 +22,7 @@ classdef ImageStackView < handle
         XLimHomeAuto
         YLimHomeAuto
         
+        cursor_list
         custom_image_cursor_fcn
         
         
@@ -123,6 +124,8 @@ classdef ImageStackView < handle
             set_figsize(obj.fig,w_fig_r,h_fig_r);
             obj.fig.Visible = 1;
             
+            obj.fig.WindowKeyPressFcn = @obj.ISVWindowKeyPressFcn;
+            
             %--------------------------------------------------------------
             % Set up callback functions
             %--------------------------------------------------------------
@@ -185,13 +188,28 @@ classdef ImageStackView < handle
             obj.ax_plot.XAxis.Visible = 0;
             obj.ax_plot.YAxis.Visible = 0;
             obj.set_custom_axim_toolbar(obj.ax_plot);
-            obj.ax_plot.Box = 0;
+            obj.ax_plot.Box = 1;
             set(obj.ax_plot,'ButtonDownFcn',@obj.custom_image_cursor_fcn);
             obj.ax_plot.NextPlot = 'replacechildren';
             
-            hlink = linkprop([obj.axim_master obj.ax_plot],...
-                {'DataAspectRatio','PlotBoxAspectRatio','XLim','YLim','Position','YDir'});
-            setappdata(obj.image_panel,'HLink',hlink);
+            obj.axim_master.ActivePositionProperty = 'Position';
+            
+            addlistener(obj.axim_master,'XLim','PostSet',@obj.Listener_axim_master_XLim);
+            addlistener(obj.axim_master,'YLim','PostSet',@obj.Listener_axim_master_YLim);
+            addlistener(obj.axim_master,'YDir','PostSet',@obj.Listener_axim_master_YDir);
+            addlistener(obj.axim_master,'Position','PostSet',@obj.Listener_axim_master_Position);
+            
+            addlistener(obj.ax_plot,'XLim','PostSet',@obj.Listener_image_XLim);
+            addlistener(obj.ax_plot,'YLim','PostSet',@obj.Listener_image_YLim);
+            addlistener(obj.ax_plot,'YDir','PostSet',@obj.Listener_image_YDir);
+            addlistener(obj.ax_plot,'Position','PostSet',@obj.Listener_image_Position);
+            
+            % addlistener(obj.axim_master,'DataAspectRatio','PostSet',@obj.Listener_DAR);
+            % saddlistener(obj.axim_master,'PlotBoxAspectRatio','PostSet',@obj.Listener_PBAR);
+            
+            % hlink = linkprop([obj.axim_master obj.ax_plot],...
+            %     {'DataAspectRatio','PlotBoxAspectRatio','XLim','YLim','Position','YDir'});
+            % setappdata(obj.image_panel,'HLink',hlink);
             
             
 
@@ -428,8 +446,12 @@ classdef ImageStackView < handle
         function add_layer(obj,image_input)
             isvimage_obj = ISVImage(image_input,obj);
             
-            hlink = getappdata(obj.image_panel,'HLink');
-            addtarget(hlink,isvimage_obj.ax);
+            % hlink = getappdata(obj.image_panel,'HLink');
+            % addtarget(hlink,isvimage_obj.ax);
+            
+            addlistener(isvimage_obj.ax,'XLim','PostSet',@obj.Listener_image_XLim);
+            addlistener(isvimage_obj.ax,'YLim','PostSet',@obj.Listener_image_YLim);
+            addlistener(isvimage_obj.ax,'YDir','PostSet',@obj.Listener_image_YDir);
             
             Nim = length(obj.image);
             
@@ -620,6 +642,47 @@ classdef ImageStackView < handle
         end
         
         %% Listeners for the property of ISV_Image objects
+        function [] = Listener_image_XLim(obj,hObject,eventData)
+            obj.axim_master.XLim = eventData.AffectedObject.XLim;
+        end
+        
+        function [] = Listener_image_YLim(obj,hObject,eventData)
+            obj.axim_master.YLim = eventData.AffectedObject.YLim;
+        end
+        
+        function [] = Listener_image_YDir(obj,hObject,eventData)
+            obj.axim_master.YDir = eventData.AffectedObject.YDir;
+        end
+        
+        function [] = Listener_image_Position(obj,hObject,eventData)
+            obj.axim_master.Position = eventData.AffectedObject.Position;
+        end
+        
+        function [] = Listener_axim_master_XLim(obj,hObject,eventData)
+            for i=1:length(obj.image)
+                obj.image(i).ax.XLim = obj.axim_master.XLim;
+            end
+            obj.ax_plot.XLim = obj.axim_master.XLim;
+        end
+        function [] = Listener_axim_master_YLim(obj,hObject,eventData)
+            for i=1:length(obj.image)
+                obj.image(i).ax.YLim = obj.axim_master.YLim;
+            end
+            obj.ax_plot.YLim = obj.axim_master.YLim;
+        end
+        function [] = Listener_axim_master_YDir(obj,hObject,eventData)
+            for i=1:length(obj.image)
+                obj.image(i).ax.YDir = obj.axim_master.YDir;
+            end
+            obj.ax_plot.YDir = obj.axim_master.YDir;
+        end
+        function [] = Listener_axim_master_Position(obj,hObject,eventData)
+            for i=1:length(obj.image)
+                obj.image(i).ax.Position = obj.axim_master.Position;
+            end
+            obj.ax_plot.Position = obj.axim_master.Position;
+        end
+        
         function [] = Listener_image_name(obj,hObject,eventData)
             eventData.AffectedObject.ui_checkbox_visbility.String = eventData.AffectedObject.name;
             im_idx = eventData.AffectedObject.id;
@@ -692,6 +755,7 @@ classdef ImageStackView < handle
             obj.image_control_panel.Position = icp_pos;
 
         end
+        
         
         %%
         %-----------------------------------------------------------------%
@@ -846,7 +910,7 @@ classdef ImageStackView < handle
         %-----------------------------------------------------------------%
         % Image Cursor Callback function
         %-----------------------------------------------------------------%
-        function image_cursor(obj,hObject,eventData)
+        function [x,y] = image_cursor(obj,hObject,eventData)
             pos = eventData.IntersectionPoint;
             x = pos(1); y = pos(2);
             % im = get(event_obj,'Target');
@@ -894,6 +958,84 @@ classdef ImageStackView < handle
             end
             
             dt = datatip(p,x,y);
+            dt.ButtonDownFcn = @obj.datatip_BtnDwnFcn;
+            obj.cursor_list = dt;
+            
+        end
+        
+        function datatip_selection_callback(obj,hObject,eventData)
+            if ~isempty(obj.cursor_list)
+                idx_selected = [];
+                for i=1:length(obj.cursor_list)
+                    if obj.cursor_list(i).Selected == 1
+                        idx_selected = i;
+                        break;
+                    end
+                end
+            
+                if isempty(idx_selected)
+                    obj.cursor_list(1).Selected = 1;
+                elseif idx_selected < length(obj.cursor_list)
+                    obj.cursor_list(idx_selected).Selected = 0;
+                    obj.cursor_list(idx_selected+1).Selected = 1;
+                elseif idx_selected == length(obj.cursor_list)
+                    obj.cursor_list(idx_selected).Selected = 0;
+                end
+            end
+        end
+        
+        % Some KeyPressFcn is defined for figure window and perform 
+        function ISVWindowKeyPressFcn(obj,hObject,eventData)
+            switch eventData.Key
+                case 't'
+                    % select a datatip to focus.
+                    obj.datatip_selection_callback(hObject,eventData);
+                case {'rightarrow','leftarrow','uparrow','downarrow'}
+                    % move the selected datatip.
+                    cursor_obj = [];
+                    for i=1:length(obj.cursor_list)
+                        if obj.cursor_list(i).Selected == 1
+                            cursor_obj = obj.cursor_list(i);
+                            break;
+                        end
+                    end
+                    if ~isempty(cursor_obj)
+                        obj.move_datatip(cursor_obj,eventData);
+                    end
+            end
+        end
+        
+        function move_datatip(obj,cursor_obj,eventData)
+            
+            idx_imtop = find([obj.image.order]==1);
+            
+            dx = obj.image(idx_imtop).Pixel_Size(1);
+            dy = obj.image(idx_imtop).Pixel_Size(2);
+            
+            switch eventData.Key
+                case 'rightarrow'
+                    cursor_obj.Parent.XData = cursor_obj.Parent.XData+dx;
+                    cursor_obj.X = cursor_obj.X+dx;
+                case 'leftarrow'
+                    cursor_obj.Parent.XData = cursor_obj.Parent.XData-dx;
+                    cursor_obj.X = cursor_obj.X-dx;
+                case 'uparrow'
+                    if strcmp(obj.axim_master.YDir,'reverse')
+                        cursor_obj.Parent.YData = cursor_obj.Parent.YData-dy;
+                        cursor_obj.Y = cursor_obj.Y-dy;
+                    else
+                        cursor_obj.Parent.YData = cursor_obj.Parent.YData+dy;
+                        cursor_obj.Y = cursor_obj.Y+dy;
+                    end
+                case 'downarrow'
+                    if strcmp(obj.axim_master.YDir,'reverse')
+                        cursor_obj.Parent.YData = cursor_obj.Parent.YData+dy;
+                        cursor_obj.Y = cursor_obj.Y+dy;
+                    else
+                        cursor_obj.Parent.YData = cursor_obj.Parent.YData-dy;
+                        cursor_obj.Y = cursor_obj.Y-dy;
+                    end
+            end
             
         end
         

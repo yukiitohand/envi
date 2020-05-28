@@ -3,7 +3,7 @@ classdef HSIview < handle
     %   Create two 
     
     properties
-        obj_ImageStackView
+        obj_ISV
         obj_SpecView
         hsiar
         nhsi
@@ -18,9 +18,7 @@ classdef HSIview < handle
             
             varargin_ImageStackView = {};
             
-            SpecView_XLimMode = 'auto';
             SpecView_XLimMan = [];
-            SpecView_YLimMode = 'stretch01';
             SpecView_YLimMan = [];
             
             if (rem(length(varargin),2)==1)
@@ -74,16 +72,16 @@ classdef HSIview < handle
                 end
             end
             
-            if isnumeric(rgb) || islogical(rgb)
-                rgb = {rgb};
-            end
+            % if isnumeric(rgb) || islogical(rgb)
+            %     rgb = {rgb};
+            % end
             obj.init_ImageStackView(rgb,...
-                'IMAGE_CURSOR_FCN',{@obj.image_cursorHSI},...
+                'IMAGE_CURSOR_FCN',@obj.image_cursorHSI,...
+                'XY_COORDINATE_SYSTEM','IMAGEPIXELS',...
                 varargin_ImageStackView{:});
             
             obj.init_SpecView('XLabel','Wavelength',...
-                'XLIMMODE',SpecView_XLimMode,'XLim',SpecView_XLimMan,...
-                'YLIMMODE',SpecView_YLimMode,'YLim',SpecView_YLimMan);
+                'XLim',SpecView_XLimMan,'YLim',SpecView_YLimMan);
             
         end
         
@@ -120,7 +118,7 @@ classdef HSIview < handle
                             if ~iscell(hsiar_i_struct.varargin_plot)
                                 hsiar_i_struct.varargin_plot = {hsiar_i_struct.varargin_plot};
                             end
-                        case 'LEGEND'
+                        case {'LEGEND','NAME','IMAGE_NAME'}
                             hsiar_i_struct.legends = hsiar_i_varargin{n+1};
                         otherwise
                             error('Unrecognized option: %s', hsiar_i_varargin{n});
@@ -130,7 +128,7 @@ classdef HSIview < handle
         end
         
         function [] = init_ImageStackView(obj,rgb,varargin)
-            obj.obj_ImageStackView = ImageStackView(rgb,varargin{:});
+            obj.obj_ISV = ImageStackView(rgb,varargin{:});
         end
         
         function [] = init_SpecView(obj,varargin)
@@ -184,14 +182,13 @@ classdef HSIview < handle
             
         end
         
-        function [output_txt] = image_cursorHSI(obj,hObject,eventData)
+        function image_cursorHSI(obj,hObject,eventData)
             % DataTip is created as the same way in ImageStackView
-            [output_txt] = obj.obj_ImageStackView.image_cursor(...
-                hObject,eventData);
+            [s,l] = obj.obj_ISV.image_cursor(hObject,eventData);
             
             % get (x,y) coordinate in the Hyperspectral image 
-            pos = get(eventData,'Position');
-            s = pos(1); l = pos(2);
+            % pos = eventData.IntersectionPoint;
+            % s = pos(1); l = pos(2);
             % plot spectra
             obj.plot(s,l);
         end

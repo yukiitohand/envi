@@ -39,6 +39,7 @@ classdef ISVImage < handle
             obj.ax.Units = 'pixels';
             obj.ax.DataAspectRatioMode = 'manual';
             obj.ax.DataAspectRatio = [1,1,1];
+            obj.ax.ActivePositionProperty = 'Position';
             obj.ax.Position = ISV_obj.axim_master.Position;
             
             obj.imobj = imagesc(obj.ax,image_input{:},'Parent',obj.ax);
