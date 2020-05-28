@@ -63,7 +63,7 @@ classdef ImageStackView < handle
                             obj.XY_COORDINATE_SYSTEM = upper(varargin{i+1});
                         case 'IMAGE_CURSOR_FCN'
                             obj.custom_image_cursor_fcn = varargin{i+1};
-                        case 'IMAGE_KEYPRESS_FCN'
+                        case 'IMAGE_WINDOWKEYPRESS_FCN'
                             obj.custom_windowkeypress_fcn = varargin{i+1};
                         otherwise
                             error('Unrecognized option: %s', varargin{i});
