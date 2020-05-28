@@ -10,6 +10,7 @@ classdef ImageStackView < handle
         image
         
         image_panel
+        image_cursor_hold_chkbox
         image_visible_panel
         image_ordswtchbtn_list
         image_control_panel
@@ -23,7 +24,10 @@ classdef ImageStackView < handle
         YLimHomeAuto
         
         cursor_list
+        cursor_xy_format
+        cursor_xy_label
         custom_image_cursor_fcn
+        custom_windowkeypress_fcn
         
         
     end
@@ -40,7 +44,8 @@ classdef ImageStackView < handle
             obj.YLimHomeMan = [];
             ydir = 'normal';
             obj.XY_COORDINATE_SYSTEM = 'IMAGEPIXELS';
-            obj.custom_image_cursor_fcn = @obj.image_cursor;
+            obj.custom_image_cursor_fcn = @obj.image_BtnDwnFcn;
+            obj.custom_windowkeypress_fcn = @obj.ISVWindowKeyPressFcn;
             if ~isempty(varargin)
                 for i=1:2:length(varargin)
                     switch upper(varargin{i})
@@ -58,6 +63,8 @@ classdef ImageStackView < handle
                             obj.XY_COORDINATE_SYSTEM = upper(varargin{i+1});
                         case 'IMAGE_CURSOR_FCN'
                             obj.custom_image_cursor_fcn = varargin{i+1};
+                        case 'IMAGE_KEYPRESS_FCN'
+                            obj.custom_windowkeypress_fcn = varargin{i+1};
                         otherwise
                             error('Unrecognized option: %s', varargin{i});
                     end
@@ -124,7 +131,22 @@ classdef ImageStackView < handle
             set_figsize(obj.fig,w_fig_r,h_fig_r);
             obj.fig.Visible = 1;
             
-            obj.fig.WindowKeyPressFcn = @obj.ISVWindowKeyPressFcn;
+            obj.fig.WindowKeyPressFcn = obj.custom_windowkeypress_fcn;
+            
+            switch obj.XY_COORDINATE_SYSTEM
+                case 'NORTHEAST'
+                    obj.cursor_xy_format = '%6.4f';
+                    obj.cursor_xy_label = '(easting, northing)';
+                    obj.axim_master.XLabel = 'Easting';
+                    obj.axim_master.YLabel = 'Northing';
+                case 'PLANETOCENTRIC'
+                    obj.cursor_xy_label = '(latitude, pltc longitude)';
+                    obj.axim_master.XLabel = 'Planetocentric Longitude';
+                    obj.axim_master.YLabel = 'Latitude';
+                case 'IMAGEPIXELS'
+                    obj.cursor_xy_format = '% 6d';
+                    obj.cursor_xy_label = '(x, y)';
+            end
             
             %--------------------------------------------------------------
             % Set up callback functions
@@ -188,7 +210,7 @@ classdef ImageStackView < handle
             obj.ax_plot.XAxis.Visible = 0;
             obj.ax_plot.YAxis.Visible = 0;
             obj.set_custom_axim_toolbar(obj.ax_plot);
-            obj.ax_plot.Box = 1;
+            obj.ax_plot.Box = 0;
             set(obj.ax_plot,'ButtonDownFcn',@obj.custom_image_cursor_fcn);
             obj.ax_plot.NextPlot = 'replacechildren';
             
@@ -204,18 +226,15 @@ classdef ImageStackView < handle
             addlistener(obj.ax_plot,'YDir','PostSet',@obj.Listener_image_YDir);
             addlistener(obj.ax_plot,'Position','PostSet',@obj.Listener_image_Position);
             
-            % addlistener(obj.axim_master,'DataAspectRatio','PostSet',@obj.Listener_DAR);
-            % saddlistener(obj.axim_master,'PlotBoxAspectRatio','PostSet',@obj.Listener_PBAR);
-            
-            % hlink = linkprop([obj.axim_master obj.ax_plot],...
-            %     {'DataAspectRatio','PlotBoxAspectRatio','XLim','YLim','Position','YDir'});
-            % setappdata(obj.image_panel,'HLink',hlink);
-            
-            
-
+            [ich_chckbx_pos] = get_image_cursor_hold_checkbox_position(obj,axim_pos);
+            obj.image_cursor_hold_chkbox = uicontrol(...
+                 'Style','checkbox','Parent',obj.image_panel,...
+                 'Position',ich_chckbx_pos,...
+                 'String','Hold cursors','Value',false,...
+                 'Callback',@obj.Change_image_cursor_hold);
+             obj.image_cursor_hold_chkbox.BackgroundColor = [0.75 0.75 0.75];
             
         end
-        
         
         % Initialize the visibility panel
         function [] = init_image_visible_panel(obj,ivp_pos)
@@ -401,6 +420,10 @@ classdef ImageStackView < handle
             icp_pos = [imp_left_margin,imp_pos(2)+imp_pos(4)+icp_btm_margin,icp_w,icp_h];
             w_fig_r = imp_left_margin + imp_pos(3) + ivp_left_margin + ivp_w + ivp_right_margin;
             h_fig_r = imp_btm_margin + imp_pos(4) + icp_btm_margin + icp_h + icp_top_margin;
+        end
+        
+        function [ich_chckbx_pos] = get_image_cursor_hold_checkbox_position(obj,axim_pos)
+            ich_chckbx_pos = [10,axim_pos(2)+axim_pos(4)+7.5,90,15];
         end
         
         function [ivp_chckbx_pos] = get_visibility_checkbox_position(obj,ivp_pos,im_id)
@@ -738,6 +761,10 @@ classdef ImageStackView < handle
                 obj.image(i).ax.Position = axim_pos;
             end
             
+            % Move image cursor hold checkbox.
+            [ich_chckbx_pos] = get_image_cursor_hold_checkbox_position(obj,axim_pos);
+            obj.image_cursor_hold_chkbox.Position = ich_chckbx_pos;
+            
             % move Visiblity_panel
             obj.image_visible_panel.Position = ivp_pos;
             for i=1:Nim
@@ -910,88 +937,119 @@ classdef ImageStackView < handle
         %-----------------------------------------------------------------%
         % Image Cursor Callback function
         %-----------------------------------------------------------------%
-        function [x,y] = image_cursor(obj,hObject,eventData)
+        function [out] = image_BtnDwnFcn(obj,hObject,eventData)
+            % Create a new cursor if no cursor is selected. If an existing
+            % cursor is "Selected", then the "Selected" cursor will be
+            % moved to the coordinate where the ButtonDown Key is pressed.
+            
+            % First, grab (x,y) coordinate.
             pos = eventData.IntersectionPoint;
             x = pos(1); y = pos(2);
-            % im = get(event_obj,'Target');
             switch obj.XY_COORDINATE_SYSTEM
-                case 'NORTHEAST'
-                    xy_format = '%6.4f';
-                    xy_str = '(eating, northing)';
-                case 'PLANETOCENTRIC'
-                    xy_str = '(latitude, pltc longitude)';
                 case 'IMAGEPIXELS'
                     x = round(x); y = round(y);
-                    xy_format = '% 6d';
-                    xy_str = '(x, y)';
+            end
+            
+            % Second, examine if any cursor is "Selected"
+            cursor_obj_selected = [];
+            for i=1:length(obj.cursor_list)
+                if obj.cursor_list(i).Selected == 1
+                    cursor_obj_selected = obj.cursor_list(i);
+                    break;
+                end
+            end
+            if isempty(cursor_obj_selected)
+                % if no cursor is "Selected" then create a new cursor.
+                cursor_obj_selected = obj.image_cursor_create(x,y);
+            else
+                % if a cursor is "Selected" then move the cursor.
+                obj.image_cursor_update(cursor_obj_selected,x,y);
+            end
+            
+            out.cursor_obj = cursor_obj_selected;
+            
+        end
+        
+        function [cursor_obj] = image_cursor_create(obj,x,y)
+            switch obj.ax_plot.NextPlot
+                case 'replacechildren'
+                    obj.cursor_list = [];
+                case 'add'
             end
             p = obj.plot(x,y,'Marker','none');
-            expr = [xy_str ' = ' sprintf(['(' xy_format ',' xy_format ')'],x,y)];
-            p.DataTipTemplate.DataTipRows(1).Label = expr;
-            p.DataTipTemplate.DataTipRows(1).Value = '';
-            p.DataTipTemplate.DataTipRows(1).Format = '%s';
+            cursor_obj = datatip(p,x,y);
+            obj.image_cursor_update(cursor_obj,x,y);
+            if isempty(obj.cursor_list)
+                cursor_obj.UserData.idx = 1;
+                obj.cursor_list = cursor_obj;
+            else
+                cursor_obj.UserData.idx = length(obj.cursor_list)+1;
+                obj.cursor_list = [obj.cursor_list cursor_obj];
+            end
             
+            cursor_obj.DeleteFcn = @obj.image_cursor_delete_current;
+            
+        end
+        
+        function image_cursor_update(obj,cursor_obj,x,y)
+            % based on the current values of X & Y, update the strings to
+            % be shown on the data tip.
+            xy_format = obj.cursor_xy_format;
+            xy_str = obj.cursor_xy_label;
+            cursor_obj.X = x; cursor_obj.Y = y;
+            
+            ln_obj = cursor_obj.Parent;
+            ln_obj.XData = x; ln_obj.YData = y;
+            expr = [xy_str ' = ' sprintf(['(' xy_format ',' xy_format ')'],x,y)];
+            ln_obj.DataTipTemplate.DataTipRows(1).Label = expr;
+            ln_obj.DataTipTemplate.DataTipRows(1).Value = '';
+            ln_obj.DataTipTemplate.DataTipRows(1).Format = '%s';
             
             Nim = length(obj.image);
+            within_image = nan(1,Nim);
             for i=1:Nim
                 if ((x>obj.image(i).XLimHome(1) && x<obj.image(i).XLimHome(2)) || (x>obj.image(i).XLimHome(2) && x<obj.image(i).XLimHome(1)) )...
                        && ((y>obj.image(i).YLimHome(1) && y<obj.image(i).YLimHome(2)) || (y>obj.image(i).YLimHome(2) && y<obj.image(i).YLimHome(1)) )...
                     [x_imi] = ceil((x-obj.image(i).XLimHome(1))/obj.image(i).Pixel_Size(1));
                     [y_imi] = ceil((y-obj.image(i).YLimHome(1))/obj.image(i).Pixel_Size(2));
                     val = obj.image(i).imobj.CData(y_imi,x_imi,:);
+                    within_image(i) = 1;
                 else
                     x_imi = nan; y_imi = nan; val = nan;
+                    within_image(i) = nan;
                 end
                 if length(val)==1
                     % output_txt{end+1} = sprintf('%10s\n (% 6d, % 6d) : % 8.5f',...
                     %         obj.image(i).name,x_imi,y_imi,val);
-                    expr = sprintf('%s\n (% 6d, % 6d) : % 8.5f',obj.image(i).name,x_imi,y_imi,val);
-                    row = dataTipTextRow(expr,'','%s');
+                    expr1 = sprintf('%s (% 6d, % 6d)',obj.image(i).name,x_imi,y_imi);
+                    row1 = dataTipTextRow(expr1,'','%s');
+                    expr2 = sprintf(' % 8.5f',val);
+                    row2 = dataTipTextRow(expr2,'','%s');
                 elseif length(val)==3
                     % output_txt{end+1} = sprintf('%10s\n (% 6d, % 6d) : (% 5.5f % 5.5f % 5.5f)',...
                     %         obj.image(i).name,x_imi,y_imi,val(1),val(2),val(3));
-                    expr = sprintf('%s\n (% 6d, % 6d) : (% 5.5f % 5.5f % 5.5f)',...
-                            obj.image(i).name,x_imi,y_imi,val(1),val(2),val(3));
-                    row = dataTipTextRow(expr,'','%s');
+                    expr1 = sprintf('%s (% 6d, % 6d)',obj.image(i).name,x_imi,y_imi);
+                    row1 = dataTipTextRow(expr1,'','%s');
+                    expr2 = sprintf(' (% 5.5f % 5.5f % 5.5f)',val(1),val(2),val(3));
+                    row2 = dataTipTextRow(expr2,'','%s');
                 end
-                p.DataTipTemplate.DataTipRows(1+i) = row;
+                ln_obj.DataTipTemplate.DataTipRows(1+2*i-1) = row1;
+                ln_obj.DataTipTemplate.DataTipRows(1+2*i) = row2;
             end
-            
-            dt = datatip(p,x,y);
-            dt.ButtonDownFcn = @obj.datatip_BtnDwnFcn;
-            obj.cursor_list = dt;
-            
-        end
-        
-        function datatip_selection_callback(obj,hObject,eventData)
-            if ~isempty(obj.cursor_list)
-                idx_selected = [];
-                for i=1:length(obj.cursor_list)
-                    if obj.cursor_list(i).Selected == 1
-                        idx_selected = i;
-                        break;
-                    end
-                end
-            
-                if isempty(idx_selected)
-                    obj.cursor_list(1).Selected = 1;
-                elseif idx_selected < length(obj.cursor_list)
-                    obj.cursor_list(idx_selected).Selected = 0;
-                    obj.cursor_list(idx_selected+1).Selected = 1;
-                elseif idx_selected == length(obj.cursor_list)
-                    obj.cursor_list(idx_selected).Selected = 0;
-                end
-            end
+            cursor_obj.UserData.withinimage = within_image;
+            cursor_obj.Selected = 1;
         end
         
         % Some KeyPressFcn is defined for figure window and perform 
-        function ISVWindowKeyPressFcn(obj,hObject,eventData)
+        function [out] = ISVWindowKeyPressFcn(obj,hObject,eventData)
+            out = [];
             switch eventData.Key
                 case 't'
-                    % select a datatip to focus.
-                    obj.datatip_selection_callback(hObject,eventData);
+                    % select an image cursor (datatip) to focus.
+                    [cursor_obj] = obj.image_cursor_select();
+                    out.cursor_obj = cursor_obj;
                 case {'rightarrow','leftarrow','uparrow','downarrow'}
-                    % move the selected datatip.
+                    % move the selected image cursor (datatip).
                     cursor_obj = [];
                     for i=1:length(obj.cursor_list)
                         if obj.cursor_list(i).Selected == 1
@@ -1000,43 +1058,103 @@ classdef ImageStackView < handle
                         end
                     end
                     if ~isempty(cursor_obj)
-                        obj.move_datatip(cursor_obj,eventData);
+                        obj.image_cursor_move(cursor_obj,eventData);
                     end
+                    out.cursor_obj = cursor_obj;
             end
         end
         
-        function move_datatip(obj,cursor_obj,eventData)
+        function [cursor_obj] = image_cursor_select(obj)
+            if ~isempty(obj.cursor_list)
+                N_cursor = length(obj.cursor_list);
+                idx_selected = [];
+                for i=1:N_cursor
+                    if obj.cursor_list(i).Selected == 1
+                        idx_selected = i;
+                        break;
+                    end
+                end
             
-            idx_imtop = find([obj.image.order]==1);
+                if isempty(idx_selected)
+                    obj.cursor_list(1).Selected = 1;
+                    cursor_obj = obj.cursor_list(1);
+                elseif idx_selected < N_cursor
+                    obj.cursor_list(idx_selected).Selected = 0;
+                    obj.cursor_list(idx_selected+1).Selected = 1;
+                    cursor_obj = obj.cursor_list(idx_selected+1);
+                elseif idx_selected == N_cursor
+                    obj.cursor_list(idx_selected).Selected = 0;
+                    cursor_obj = [];
+                end
+            end
+        end
+        
+        function image_cursor_move(obj,cursor_obj,eventData)
+            
+            % find the image that overlay on the   
+            im_order = [obj.image.order];
+            image_overlain = cursor_obj.UserData.withinimage;
+            [~,idx_imtop] = min(im_order.*image_overlain);
             
             dx = obj.image(idx_imtop).Pixel_Size(1);
             dy = obj.image(idx_imtop).Pixel_Size(2);
             
             switch eventData.Key
                 case 'rightarrow'
-                    cursor_obj.Parent.XData = cursor_obj.Parent.XData+dx;
-                    cursor_obj.X = cursor_obj.X+dx;
+                    x_new = cursor_obj.X+dx; y_new = cursor_obj.Y;
                 case 'leftarrow'
-                    cursor_obj.Parent.XData = cursor_obj.Parent.XData-dx;
-                    cursor_obj.X = cursor_obj.X-dx;
+                    x_new = cursor_obj.X-dx; y_new = cursor_obj.Y;
                 case 'uparrow'
                     if strcmp(obj.axim_master.YDir,'reverse')
-                        cursor_obj.Parent.YData = cursor_obj.Parent.YData-dy;
-                        cursor_obj.Y = cursor_obj.Y-dy;
+                       x_new = cursor_obj.X; y_new = cursor_obj.Y-dy;
                     else
-                        cursor_obj.Parent.YData = cursor_obj.Parent.YData+dy;
-                        cursor_obj.Y = cursor_obj.Y+dy;
+                        x_new = cursor_obj.X; y_new = cursor_obj.Y+dy;
                     end
                 case 'downarrow'
                     if strcmp(obj.axim_master.YDir,'reverse')
-                        cursor_obj.Parent.YData = cursor_obj.Parent.YData+dy;
-                        cursor_obj.Y = cursor_obj.Y+dy;
+                        x_new = cursor_obj.X; y_new = cursor_obj.Y+dy;
                     else
-                        cursor_obj.Parent.YData = cursor_obj.Parent.YData-dy;
-                        cursor_obj.Y = cursor_obj.Y-dy;
+                        x_new = cursor_obj.X; y_new = cursor_obj.Y-dy;
                     end
             end
+            obj.image_cursor_update(cursor_obj,x_new,y_new);
             
+        end
+        
+        function image_cursor_delete_current(obj,hObject,eventData)
+            cursor_obj = hObject;
+            idx_rm = cursor_obj.UserData.idx;
+            N_cursor = length(obj.cursor_list);
+            for i=(idx_rm+1):N_cursor
+                obj.cursor_list(i).UserData.idx = obj.cursor_list(i).UserData.idx-1;
+            end
+            idx_keep = setdiff(1:N_cursor,idx_rm);
+            obj.cursor_list = obj.cursor_list(idx_keep);
+            
+            ln_obj =  cursor_obj.Parent;
+            delete(ln_obj);
+            delete(cursor_obj);
+
+        end
+        
+        function image_cursor_delete_all(obj,hObject,eventData)
+            N_cursor = length(obj.cursor_list);
+            for i=1:N_cursor
+                ln_obj =  obj.cursor_list(i).Parent;
+                delete(obj.cursor_list(i));
+                delete(ln_obj);
+            end
+            obj.cursor_list = [];
+            
+        end
+        
+        function [] = Change_image_cursor_hold(obj,hObject,eventData)
+            switch hObject.Value
+                case 0
+                    obj.ax_plot.NextPlot = 'replacechildren';
+                case 1
+                    obj.ax_plot.NextPlot = 'add';
+            end
         end
         
         %-----------------------------------------------------------------%
