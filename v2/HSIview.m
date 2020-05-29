@@ -7,7 +7,9 @@ classdef HSIview < handle
         obj_SpecView
         hsiar
         nhsi
+        obj_HSIviewPlot
         % plot properties
+        plot_hold_status
     end
     
     methods
@@ -76,12 +78,15 @@ classdef HSIview < handle
             %     rgb = {rgb};
             % end
             obj.init_ImageStackView(rgb,...
-                'IMAGE_CURSOR_FCN',@obj.image_cursorHSI,...
+                'IMAGE_CURSOR_FCN',@obj.image_BtnDwnFcn_HSIview,...
+                'IMAGE_WINDOWKEYPRESS_FCN',@obj.image_WindowKeyPressFcn_HSIview,...
                 'XY_COORDINATE_SYSTEM','IMAGEPIXELS',...
                 varargin_ImageStackView{:});
             
             obj.init_SpecView('XLabel','Wavelength',...
                 'XLim',SpecView_XLimMan,'YLim',SpecView_YLimMan);
+            
+            obj.obj_ISV.image_cursor_hold_chkbox.Callback = @obj.Change_image_cursor_hold_HSIview;
             
         end
         
@@ -135,8 +140,23 @@ classdef HSIview < handle
             obj.obj_SpecView = SpecView(varargin{:});
         end
         
-        function [] = plot(obj,s,l)
-            cla(obj.obj_SpecView.ax);
+        function [] = plot(obj,cursor_obj)
+            % First get the pointer to HSIviewPlot object linked to the
+            % cursor.
+            if isfield(cursor_obj.UserData,'HSIviewPlot_obj')
+                hsivplot_obj = cursor_obj.UserData.HSIviewPlot_obj;
+            else
+                hsivplot_obj = HSIviewPlot();
+                hsivplot_obj.cursor_obj = cursor_obj;
+                cursor_obj.UserData.HSIviewPlot_obj = hsivplot_obj;
+            end
+            
+            x = cursor_obj.X; y = cursor_obj.Y;
+            
+            
+            s = x; l = y;
+                
+            % cla(obj.obj_SpecView.ax);
             hold(obj.obj_SpecView.ax,'on');
             for i=1:obj.nhsi
                 % get spectra
@@ -148,49 +168,68 @@ classdef HSIview < handle
                 if obj.hsiar(i).is_bands_inverse
                     bdxes = obj.hsiar(i).hdr.bands-bdxes+1;
                 end
-                
-                obj.obj_SpecView.plot([wv,spc,obj.hsiar(i).varargin_plot,...
-                    'DisplayName',sprintf('%s X:% 4d, Y:% 4d',obj.hsiar(i).legend,s,l)],...
-                    {'Band',bdxes});
-            
-                
-%                 if ~isempty(obj.hsiar(i).hsi.BP1nan)
-%                     [spcbp,wv] = obj.hsiar(i).hsi.get_spectrum(s,l,...
-%                         'BANDS',obj.hsiar(i).bands,...
-%                         'BANDS_INVERSE',obj.hsiar(i).is_bands_inverse,...
-%                         'AVERAGE_WINDOW',obj.hsiar(i).ave_window,...
-%                         'COEFF',obj.hsiar(i).hsi.BP1nan(:,s),...
-%                         'COEFF_INVERSE',obj.hsiar(i).hsi.is_bp1nan_inverse);
-%                     spcbp = spcbp+obj.hsiar(i).spc_shift;
-%                     obj.obj_SpecView.plot({wv,spcbp,'x-',...
-%                             'DisplayName',sprintf('BP - %s X:% 4d, Y:% 4d',obj.hsiar(i).legend,s,l)});
-%                 end
-%                 if ~isempty(hsiar(i).hsi.GP1nan)
-%                     [spcgp,wv] = obj.hsiar(i).hsi.get_spectrum(s,l,...
-%                         'BANDS',obj.hsiar(i).bands,...
-%                         'BANDS_INVERSE',obj.hsiar(i).is_bands_inverse,...
-%                         'AVERAGE_WINDOW',obj.hsiar(i).ave_window,...
-%                         'COEFF',obj.hsiar(i).hsi.GP1nan(:,s),...
-%                         'COEFF_INVERSE',obj.hsiar(i).hsi.is_gp1nan_inverse);
-%                     spcbp = spcbp+obj.hsiar(i).spc_shift;
-%                     obj.obj_SpecView.plot({wv,spcgp,'x-',...
-%                             'DisplayName',sprintf('GP - %s X:% 4d, Y:% 4d',obj.hsiar(i).legend,s,l)});   
-%                 end    
+                if length(hsivplot_obj.line_obj)<i
+                    line_obj = obj.obj_SpecView.plot([wv,spc,obj.hsiar(i).varargin_plot,...
+                        'DisplayName',sprintf('%s X:% 4d, Y:% 4d',obj.hsiar(i).legend,s,l)],...
+                        {'Band',bdxes});
+                    % store line object into HSIviewPlot object.
+                    if i==1
+                       hsivplot_obj.line_obj = line_obj;
+                    else
+                       hsivplot_obj.line_obj = [hsivplot_obj.line_obj line_obj];
+                    end
+                else
+                    hsivplot_obj.line_obj(i).XData = wv;
+                    hsivplot_obj.line_obj(i).YData = spc;
+                    hsivplot_obj.line_obj(i).DisplayName = sprintf('%s X:% 4d, Y:% 4d',obj.hsiar(i).legend,s,l);
+                end
+
             end
             obj.obj_SpecView.set_xlim();
             obj.obj_SpecView.set_ylim();
             
         end
         
-        function image_cursorHSI(obj,hObject,eventData)
+        function image_BtnDwnFcn_HSIview(obj,hObject,eventData)
             % DataTip is created as the same way in ImageStackView
-            [s,l] = obj.obj_ISV.image_cursor(hObject,eventData);
+            [out] = obj.obj_ISV.image_BtnDwnFcn(hObject,eventData);
+            out.cursor_obj.DeleteFcn = @obj.image_cursor_delete_current;
             
             % get (x,y) coordinate in the Hyperspectral image 
             % pos = eventData.IntersectionPoint;
             % s = pos(1); l = pos(2);
             % plot spectra
-            obj.plot(s,l);
+
+            obj.plot(out.cursor_obj);
+            
+        end
+        
+        function image_WindowKeyPressFcn_HSIview(obj,figobj,eventData)
+            [out] = obj.obj_ISV.ISVWindowKeyPressFcn(figobj,eventData);
+            if isfield(out,'cursor_obj') && ~isempty(out.cursor_obj)
+                switch eventData.Key
+                    case {'rightarrow','leftarrow','uparrow','downarrow'}
+                        obj.plot(out.cursor_obj);
+                end
+            end
+        end
+        
+        function Change_image_cursor_hold_HSIview(obj,hObject,eventData)
+            obj.obj_ISV.Change_image_cursor_hold(hObject,eventData);
+            switch hObject.Value
+                case 0
+                    obj.plot_hold_status = 0;
+                case 1
+                    obj.plot_hold_status = 1;
+            end
+        end
+        
+        function image_cursor_delete_current(obj,cursor_obj,eventData)
+            for i=1:length(cursor_obj.UserData.HSIviewPlot_obj.line_obj)
+                delete(cursor_obj.UserData.HSIviewPlot_obj.line_obj(i));
+            end
+            delete(cursor_obj.UserData.HSIviewPlot_obj);
+            obj.obj_ISV.image_cursor_delete_current(cursor_obj,eventData);
         end
     end
 end

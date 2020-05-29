@@ -5,7 +5,6 @@ classdef SpecView < handle
     properties
         fig
         ax
-        ax_Properties
         XLimMode
         XLimMargin
         XLimMan
@@ -96,13 +95,13 @@ classdef SpecView < handle
             
         end
         
-        function [] = plot(obj,plot_varargin,dataTipTextRow_varargin)
-            p = plot(obj.ax,plot_varargin{:});
+        function [line_obj] = plot(obj,plot_varargin,dataTipTextRow_varargin)
+            line_obj = plot(obj.ax,plot_varargin{:});
             % Always show indexes
-            row_add1 = dataTipTextRow('Index', 1:length(p.XData));
-            p.DataTipTemplate.DataTipRows(end+1) = row_add1;
+            row_add1 = dataTipTextRow('Index', 1:length(line_obj.XData));
+            line_obj.DataTipTemplate.DataTipRows(end+1) = row_add1;
             row_add = dataTipTextRow(dataTipTextRow_varargin{:});
-            p.DataTipTemplate.DataTipRows(end+1) = row_add;
+            line_obj.DataTipTemplate.DataTipRows(end+1) = row_add;
         end
         
         function [] = set_xlim(obj,varargin)
