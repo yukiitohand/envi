@@ -1183,7 +1183,9 @@ classdef ImageStackView < handle
             
         end
         
-        %%
+        %% delete the object 
+        % either the figure is closed or the object is deleted, the other
+        % is also deleted.
         function FigureDeleteFcn(obj,hObject,eventData)
             Nim = length(obj.image);
             for i=1:Nim
@@ -1195,6 +1197,22 @@ classdef ImageStackView < handle
                 delete(fig_children(i));
             end
             delete(obj.fig);
+            delete(obj);
+        end
+        
+        function delete(obj)
+            Nim = length(obj.image);
+            for i=1:Nim
+                delete(obj.image(i));
+            end
+            if isvalid(obj.fig)
+                fig_children = findobj(obj.fig);
+                N = length(fig_children);
+                for i=1:N
+                    delete(fig_children(i));
+                end
+                delete(obj.fig);
+            end
             delete(obj);
         end
         
