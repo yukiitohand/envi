@@ -137,12 +137,12 @@ classdef ImageStackView < handle
                 case 'NORTHEAST'
                     obj.cursor_xy_format = '%6.4f';
                     obj.cursor_xy_label = '(easting, northing)';
-                    obj.axim_master.XLabel = 'Easting';
-                    obj.axim_master.YLabel = 'Northing';
+                    obj.axim_master.XLabel.String = 'Easting';
+                    obj.axim_master.YLabel.String = 'Northing';
                 case 'PLANETOCENTRIC'
                     obj.cursor_xy_label = '(latitude, pltc longitude)';
-                    obj.axim_master.XLabel = 'Planetocentric Longitude';
-                    obj.axim_master.YLabel = 'Latitude';
+                    obj.axim_master.XLabel.String = 'Planetocentric Longitude';
+                    obj.axim_master.YLabel.String = 'Latitude';
                 case 'IMAGEPIXELS'
                     obj.cursor_xy_format = '% 6d';
                     obj.cursor_xy_label = '(x, y)';
@@ -155,6 +155,7 @@ classdef ImageStackView < handle
             % hdt = datacursormode(obj.fig);
             % hdt.Interpreter = 'none';
             % set(hdt,'UpdateFcn',image_cursor_fcn);
+            % obj.deleteFcn
             
         end
         
@@ -165,7 +166,7 @@ classdef ImageStackView < handle
         
         % Initialize the main figure window
         function [imp_pos,axim_pos,ivp_pos,icp_pos] = init_Figure(obj)
-            obj.fig = figure('Visible',0);
+            obj.fig = figure('Visible',0,'DeleteFcn',@obj.FigureDeleteFcn);
             w_fig = 600;
             h_fig = 600;
             aspectR = 1;
@@ -768,7 +769,7 @@ classdef ImageStackView < handle
             % move Visiblity_panel
             obj.image_visible_panel.Position = ivp_pos;
             for i=1:Nim
-                [ivp_chckbx_pos_i] = obj.get_visibility_checkbox_position(ivp_pos,i);
+                [ivp_chckbx_pos_i] = obj.get_visibility_checkbox_position(ivp_pos,obj.image(i).order);
                 obj.image(i).ui_checkbox_visbility.Position = ivp_chckbx_pos_i;
             end
             
@@ -1037,7 +1038,7 @@ classdef ImageStackView < handle
                 ln_obj.DataTipTemplate.DataTipRows(1+2*i) = row2;
             end
             cursor_obj.UserData.withinimage = within_image;
-            cursor_obj.Selected = 1;
+            % cursor_obj.Selected = 1;
         end
         
         % Some KeyPressFcn is defined for figure window and perform 
@@ -1137,17 +1138,6 @@ classdef ImageStackView < handle
 
         end
         
-        function image_cursor_delete_all(obj,hObject,eventData)
-            N_cursor = length(obj.cursor_list);
-            for i=1:N_cursor
-                ln_obj =  obj.cursor_list(i).Parent;
-                delete(obj.cursor_list(i));
-                delete(ln_obj);
-            end
-            obj.cursor_list = [];
-            
-        end
-        
         function [] = Change_image_cursor_hold(obj,hObject,eventData)
             switch hObject.Value
                 case 0
@@ -1191,7 +1181,22 @@ classdef ImageStackView < handle
             % set(obj.ax_plot,'ButtonDownFcn',@obj.custom_image_cursor_fcn);
             
             
-        end  
+        end
+        
+        %%
+        function FigureDeleteFcn(obj,hObject,eventData)
+            Nim = length(obj.image);
+            for i=1:Nim
+                delete(obj.image(i));
+            end
+            fig_children = findobj(obj.fig);
+            N = length(fig_children);
+            for i=1:N
+                delete(fig_children(i));
+            end
+            delete(obj.fig);
+            delete(obj);
+        end
         
     end
 end

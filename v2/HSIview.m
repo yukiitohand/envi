@@ -102,7 +102,7 @@ classdef HSIview < handle
             hsiar_i_struct.ave_window = [1 1];
             hsiar_i_struct.spc_shift = 0;
             hsiar_i_struct.varargin_plot = {};
-            hsiar_i_struct.legend = '';
+            hsiar_i_struct.name = '';
             hsiar_i_struct.plot_gp_bp = 0;
             if (rem(length(hsiar_i_varargin),2)==1)
                 error('Optional parameters should always go by pairs');
@@ -116,7 +116,7 @@ classdef HSIview < handle
                             hsiar_i_struct.is_bands_inverse = hsiar_i_varargin{n+1};
                         case 'AVERAGE_WINDOW'
                             hsiar_i_struct.ave_window = hsiar_i_varargin{n+1};
-                        case 'SHIFTS'
+                        case 'SHIFT'
                             hsiar_i_struct.spc_shift = hsiar_i_varargin{n+1};
                         case 'VARARGIN_PLOT'
                             hsiar_i_struct.varargin_plot = hsiar_i_varargin{n+1};
@@ -124,7 +124,7 @@ classdef HSIview < handle
                                 hsiar_i_struct.varargin_plot = {hsiar_i_struct.varargin_plot};
                             end
                         case {'LEGEND','NAME','IMAGE_NAME'}
-                            hsiar_i_struct.legends = hsiar_i_varargin{n+1};
+                            hsiar_i_struct.name = hsiar_i_varargin{n+1};
                         otherwise
                             error('Unrecognized option: %s', hsiar_i_varargin{n});
                     end
@@ -170,7 +170,7 @@ classdef HSIview < handle
                 end
                 if length(hsivplot_obj.line_obj)<i
                     line_obj = obj.obj_SpecView.plot([wv,spc,obj.hsiar(i).varargin_plot,...
-                        'DisplayName',sprintf('%s X:% 4d, Y:% 4d',obj.hsiar(i).legend,s,l)],...
+                        'DisplayName',sprintf('%s X:% 4d, Y:% 4d',obj.hsiar(i).name,s,l)],...
                         {'Band',bdxes});
                     % store line object into HSIviewPlot object.
                     if i==1
@@ -181,7 +181,7 @@ classdef HSIview < handle
                 else
                     hsivplot_obj.line_obj(i).XData = wv;
                     hsivplot_obj.line_obj(i).YData = spc;
-                    hsivplot_obj.line_obj(i).DisplayName = sprintf('%s X:% 4d, Y:% 4d',obj.hsiar(i).legend,s,l);
+                    hsivplot_obj.line_obj(i).DisplayName = sprintf('%s X:% 4d, Y:% 4d',obj.hsiar(i).name,s,l);
                 end
 
             end
