@@ -104,6 +104,7 @@ end
 
 if do_average
     if verLessThan('matlab','9.6')
+        % code to run MATLAB R2018b and earlier here
         spc = nanmean(nanmean(spc,1),2);
     else
         spc = nanmean(spc,[1,2]);
