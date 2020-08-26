@@ -103,7 +103,11 @@ else
 end
 
 if do_average
-    spc = nanmean(spc,[1,2]);
+    if verLessThan('matlab','9.6')
+        spc = nanmean(nanmean(spc,1),2);
+    else
+        spc = nanmean(spc,[1,2]);
+    end
 end
 
 if l_coeff==l_bands
