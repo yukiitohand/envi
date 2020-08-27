@@ -6,6 +6,7 @@ classdef ImageStackView < handle
         fig
         axim_master
         axim_aspectR
+        ax_top % dummy Axes
         ax_plot
         image
         
@@ -100,15 +101,15 @@ classdef ImageStackView < handle
                         Nim = length(image_list);
                         for i=1:Nim
                             iflip = Nim-i+1;
-                            obj.add_layer(image_list{iflip});   
+                            obj.add_layer(image_list{iflip}{:});   
                         end
                     else
                         % Nim = 1;
-                        obj.add_layer(image_list);  
+                        obj.add_layer(image_list{:});  
                     end
                 else
                     % Nim = 1;
-                    obj.add_layer(image_list);
+                    obj.add_layer(image_list{:});
                 end
             end
             
@@ -136,16 +137,17 @@ classdef ImageStackView < handle
             switch obj.XY_COORDINATE_SYSTEM
                 case 'NORTHEAST'
                     obj.cursor_xy_format = '%6.4f';
-                    obj.cursor_xy_label = '(easting, northing)';
+                    obj.cursor_xy_label = {'E', 'N'};
                     obj.axim_master.XLabel.String = 'Easting';
                     obj.axim_master.YLabel.String = 'Northing';
                 case 'PLANETOCENTRIC'
-                    obj.cursor_xy_label = '(latitude, pltc longitude)';
+                    obj.cursor_xy_format = '%6.4f';
+                    obj.cursor_xy_label = {'PLTCLon','Lat'};
                     obj.axim_master.XLabel.String = 'Planetocentric Longitude';
                     obj.axim_master.YLabel.String = 'Latitude';
                 case 'IMAGEPIXELS'
                     obj.cursor_xy_format = '% 6d';
-                    obj.cursor_xy_label = '(x, y)';
+                    obj.cursor_xy_label = {'X','Y'};
             end
             
             %--------------------------------------------------------------
@@ -215,6 +217,25 @@ classdef ImageStackView < handle
             set(obj.ax_plot,'ButtonDownFcn',@obj.custom_image_cursor_fcn);
             obj.ax_plot.NextPlot = 'replacechildren';
             
+            obj.ax_top = axes('Parent',obj.image_panel);
+            obj.ax_top.Units = 'pixels';
+            obj.ax_top.Position = obj.axim_master.Position;
+            obj.ax_top.DataAspectRatioMode = 'manual';
+            obj.ax_top.DataAspectRatio = [1,1,1];
+            obj.ax_top.XLim = obj.axim_master.XLim;
+            obj.ax_top.YLim = obj.axim_master.YLim;
+            obj.ax_top.YDir = obj.axim_master.YDir;
+            obj.ax_top.PickableParts = 'all';
+            obj.ax_top.Color = 'none';
+            obj.ax_top.XTick = [];
+            obj.ax_top.YTick = [];
+            obj.ax_top.XAxis.Visible = 0;
+            obj.ax_top.YAxis.Visible = 0;
+            obj.set_custom_axim_toolbar(obj.ax_top);
+            obj.ax_top.Box = 0;
+            set(obj.ax_top,'ButtonDownFcn',@obj.custom_image_cursor_fcn);
+            obj.ax_top.NextPlot = 'replacechildren';
+            
             obj.axim_master.ActivePositionProperty = 'Position';
             
             addlistener(obj.axim_master,'XLim','PostSet',@obj.Listener_axim_master_XLim);
@@ -226,6 +247,11 @@ classdef ImageStackView < handle
             addlistener(obj.ax_plot,'YLim','PostSet',@obj.Listener_image_YLim);
             addlistener(obj.ax_plot,'YDir','PostSet',@obj.Listener_image_YDir);
             addlistener(obj.ax_plot,'Position','PostSet',@obj.Listener_image_Position);
+            
+            addlistener(obj.ax_top,'XLim','PostSet',@obj.Listener_image_XLim);
+            addlistener(obj.ax_top,'YLim','PostSet',@obj.Listener_image_YLim);
+            addlistener(obj.ax_top,'YDir','PostSet',@obj.Listener_image_YDir);
+            addlistener(obj.ax_top,'Position','PostSet',@obj.Listener_image_Position);
             
             [ich_chckbx_pos] = get_image_cursor_hold_checkbox_position(obj,axim_pos);
             obj.image_cursor_hold_chkbox = uicontrol(...
@@ -396,7 +422,7 @@ classdef ImageStackView < handle
             % given w_fig, h_fig
             imp_left_margin = 6; imp_btm_margin = 5;
             axim_left_margin = 60; axim_btm_margin = 50; 
-            axim_right_margin = 10; axim_top_margin = 30;
+            axim_right_margin = 60; axim_top_margin = 40;
             ivp_right_margin = 3;
             icp_btm_margin = 3; ivp_left_margin = 3; icp_top_margin = 3;
             icp_w = 600; icp_h = 40;
@@ -424,7 +450,7 @@ classdef ImageStackView < handle
         end
         
         function [ich_chckbx_pos] = get_image_cursor_hold_checkbox_position(obj,axim_pos)
-            ich_chckbx_pos = [10,axim_pos(2)+axim_pos(4)+7.5,90,15];
+            ich_chckbx_pos = [10,axim_pos(2)+axim_pos(4)+20,90,15];
         end
         
         function [ivp_chckbx_pos] = get_visibility_checkbox_position(obj,ivp_pos,im_id)
@@ -467,8 +493,8 @@ classdef ImageStackView < handle
                 'Tag',num2str(i));
         end
         
-        function add_layer(obj,image_input)
-            isvimage_obj = ISVImage(image_input,obj);
+        function [isvimage_obj] = add_layer(obj,varargin)
+            isvimage_obj = ISVImage(varargin,obj);
             
             % hlink = getappdata(obj.image_panel,'HLink');
             % addtarget(hlink,isvimage_obj.ax);
@@ -570,6 +596,7 @@ classdef ImageStackView < handle
             set(isvimage_obj.ax,'ButtonDownFcn',@obj.custom_image_cursor_fcn);
             
             uistack(obj.ax_plot,'top');
+            uistack(obj.ax_top,'top');
             
         end
         
@@ -687,24 +714,28 @@ classdef ImageStackView < handle
                 obj.image(i).ax.XLim = obj.axim_master.XLim;
             end
             obj.ax_plot.XLim = obj.axim_master.XLim;
+            obj.ax_top.XLim = obj.axim_master.XLim;
         end
         function [] = Listener_axim_master_YLim(obj,hObject,eventData)
             for i=1:length(obj.image)
                 obj.image(i).ax.YLim = obj.axim_master.YLim;
             end
             obj.ax_plot.YLim = obj.axim_master.YLim;
+            obj.ax_top.YLim = obj.axim_master.YLim;
         end
         function [] = Listener_axim_master_YDir(obj,hObject,eventData)
             for i=1:length(obj.image)
                 obj.image(i).ax.YDir = obj.axim_master.YDir;
             end
             obj.ax_plot.YDir = obj.axim_master.YDir;
+            obj.ax_top.YDir = obj.axim_master.YDir;
         end
         function [] = Listener_axim_master_Position(obj,hObject,eventData)
             for i=1:length(obj.image)
                 obj.image(i).ax.Position = obj.axim_master.Position;
             end
             obj.ax_plot.Position = obj.axim_master.Position;
+            obj.ax_top.Position = obj.axim_master.Position;
         end
         
         function [] = Listener_image_name(obj,hObject,eventData)
@@ -715,13 +746,17 @@ classdef ImageStackView < handle
         end
         
         function [] = Listener_AlphaDataHome(obj,hObject,eventData)
-            eventData.AffectedObject.imobj.AlphaData...
-                = eventData.AffectedObject.AlphaDataHome * eventData.AffectedObject.transparency;
+            for i=1:length(eventData.AffectedObject.imobj)
+                eventData.AffectedObject.imobj(i).AlphaData...
+                    = eventData.AffectedObject.AlphaDataHome{i} * eventData.AffectedObject.transparency;
+            end
         end
         
         function [] = Listener_transparency(obj,hObject,eventData)
-            eventData.AffectedObject.imobj.AlphaData...
-                = eventData.AffectedObject.AlphaDataHome * eventData.AffectedObject.transparency;
+            for i=1:length(eventData.AffectedObject.imobj)
+                eventData.AffectedObject.imobj(i).AlphaData...
+                    = eventData.AffectedObject.AlphaDataHome{i} * eventData.AffectedObject.transparency;
+            end
         end
         
         function [] = Listener_Colormap(obj,hObject,eventData)
@@ -795,7 +830,9 @@ classdef ImageStackView < handle
             switch hObject.Value
                 case 0
                     isvimage_obj.ax.Visible = 0;
-                    isvimage_obj.imobj.Visible = 0;
+                    for i=1:length(isvimage_obj.imobj)
+                        isvimage_obj.imobj(i).Visible = 0;
+                    end
                     %
                     [icp_children] = obj.get_icp_children();
                     if im_idx == icp_children.imsel_image_control_panel.Value-1
@@ -804,7 +841,9 @@ classdef ImageStackView < handle
                     end
                 case 1
                     isvimage_obj.ax.Visible = 1;
-                    isvimage_obj.imobj.Visible = 1;
+                    for i=1:length(isvimage_obj.imobj)
+                        isvimage_obj.imobj(i).Visible = 1;
+                    end
             end
         end
         
@@ -848,21 +887,23 @@ classdef ImageStackView < handle
             Answer = inputdlg_alphadata(isvimage_obj.name);
             ignore_val = Answer.ignore_value;
             if ~isempty(Answer)
-                if strcmpi(ignore_val,'NaN')
-                    ignore_val = NaN;
-                    msk = double(~isnan(isvimage_obj.imobj.CData));
-                else
-                    ignore_val = str2double(ignore_val);
-                    if isnan(ignore_val)
-                        error('Input "Ignore Value" is invalid.');
+                for i=1:length(isvimage_obj.imobj)
+                    if strcmpi(ignore_val,'NaN')
+                        ignore_val = NaN;
+                        msk = double(~isnan(isvimage_obj.imobj(i).CData));
+                    else
+                        ignore_val = str2double(ignore_val);
+                        if isnan(ignore_val)
+                            error('Input "Ignore Value" is invalid.');
+                        end
+                        msk = double(~isvimage_obj.imobj(i).CData==ignore_val);
                     end
-                    msk = double(~isvimage_obj.imobj.CData==ignore_val);
-                end
-                switch Answer.option1.id
-                    case 1 % 'Combine the current AlphaDataHome'
-                        isvimage_obj.AlphaDataHome = isvimage_obj.AlphaDataHome.*msk;
-                    case 2 % 'Overwrite the current AlphaDataHome'
-                        isvimage_obj.AlphaDataHome = msk;
+                    switch Answer.option1.id
+                        case 1 % 'Combine the current AlphaDataHome'
+                            isvimage_obj.AlphaDataHome{i} = isvimage_obj.AlphaDataHome{i}.*msk;
+                        case 2 % 'Overwrite the current AlphaDataHome'
+                            isvimage_obj.AlphaDataHome{i} = msk;
+                    end
                 end
             end
         end
@@ -917,7 +958,7 @@ classdef ImageStackView < handle
                 error('Input value is invalid');
             end
             id_im = icp_children.imsel_image_control_panel.Value-1;
-            if if_im > 0
+            if id_im > 0
                 icp_children.slider_transparency.Value = v;
                 obj.image(id_im).transparency = v;
             else
@@ -1001,7 +1042,7 @@ classdef ImageStackView < handle
             
             ln_obj = cursor_obj.Parent;
             ln_obj.XData = x; ln_obj.YData = y;
-            expr = [xy_str ' = ' sprintf(['(' xy_format ',' xy_format ')'],x,y)];
+            expr = sprintf(['%s:' xy_format ', %s:' xy_format],xy_str{1},x,xy_str{2},y);
             ln_obj.DataTipTemplate.DataTipRows(1).Label = expr;
             ln_obj.DataTipTemplate.DataTipRows(1).Value = '';
             ln_obj.DataTipTemplate.DataTipRows(1).Format = '%s';
@@ -1009,36 +1050,39 @@ classdef ImageStackView < handle
             Nim = length(obj.image);
             within_image = nan(1,Nim);
             for i=1:Nim
-                if ((x>obj.image(i).XLimHome(1) && x<obj.image(i).XLimHome(2)) || (x>obj.image(i).XLimHome(2) && x<obj.image(i).XLimHome(1)) )...
-                       && ((y>obj.image(i).YLimHome(1) && y<obj.image(i).YLimHome(2)) || (y>obj.image(i).YLimHome(2) && y<obj.image(i).YLimHome(1)) )...
-                    [x_imi] = ceil((x-obj.image(i).XLimHome(1))/obj.image(i).Pixel_Size(1));
-                    [y_imi] = ceil((y-obj.image(i).YLimHome(1))/obj.image(i).Pixel_Size(2));
-                    val = obj.image(i).imobj.CData(y_imi,x_imi,:);
-                    within_image(i) = 1;
-                else
-                    x_imi = nan; y_imi = nan; val = nan;
-                    within_image(i) = nan;
+                if ~obj.image(i).ismask
+                    if ((x>obj.image(i).XLimHome(1) && x<obj.image(i).XLimHome(2)) || (x>obj.image(i).XLimHome(2) && x<obj.image(i).XLimHome(1)) )...
+                           && ((y>obj.image(i).YLimHome(1) && y<obj.image(i).YLimHome(2)) || (y>obj.image(i).YLimHome(2) && y<obj.image(i).YLimHome(1)) )...
+                        [x_imi] = ceil((x-obj.image(i).XLimHome(1))/obj.image(i).Pixel_Size(1));
+                        [y_imi] = ceil((y-obj.image(i).YLimHome(1))/obj.image(i).Pixel_Size(2));
+                        val = obj.image(i).imobj.CData(y_imi,x_imi,:);
+                        within_image(i) = 1;
+                    else
+                        x_imi = nan; y_imi = nan; val = nan;
+                        within_image(i) = nan;
+                    end
+                    if length(val)==1
+                        % output_txt{end+1} = sprintf('%10s\n (% 6d, % 6d) : % 8.5f',...
+                        %         obj.image(i).name,x_imi,y_imi,val);
+                        expr1 = sprintf('%s (% 6d, % 6d)',obj.image(i).name,x_imi,y_imi);
+                        row1 = dataTipTextRow(expr1,'','%s');
+                        expr2 = sprintf(' % 8.5f',val);
+                        row2 = dataTipTextRow(expr2,'','%s');
+                    elseif length(val)==3
+                        % output_txt{end+1} = sprintf('%10s\n (% 6d, % 6d) : (% 5.5f % 5.5f % 5.5f)',...
+                        %         obj.image(i).name,x_imi,y_imi,val(1),val(2),val(3));
+                        expr1 = sprintf('%s (% 6d, % 6d)',obj.image(i).name,x_imi,y_imi);
+                        row1 = dataTipTextRow(expr1,'','%s');
+                        expr2 = sprintf(' (% 5.5f % 5.5f % 5.5f)',val(1),val(2),val(3));
+                        row2 = dataTipTextRow(expr2,'','%s');
+                    end
+                    ln_obj.DataTipTemplate.DataTipRows(1+2*i-1) = row1;
+                    ln_obj.DataTipTemplate.DataTipRows(1+2*i) = row2;
                 end
-                if length(val)==1
-                    % output_txt{end+1} = sprintf('%10s\n (% 6d, % 6d) : % 8.5f',...
-                    %         obj.image(i).name,x_imi,y_imi,val);
-                    expr1 = sprintf('%s (% 6d, % 6d)',obj.image(i).name,x_imi,y_imi);
-                    row1 = dataTipTextRow(expr1,'','%s');
-                    expr2 = sprintf(' % 8.5f',val);
-                    row2 = dataTipTextRow(expr2,'','%s');
-                elseif length(val)==3
-                    % output_txt{end+1} = sprintf('%10s\n (% 6d, % 6d) : (% 5.5f % 5.5f % 5.5f)',...
-                    %         obj.image(i).name,x_imi,y_imi,val(1),val(2),val(3));
-                    expr1 = sprintf('%s (% 6d, % 6d)',obj.image(i).name,x_imi,y_imi);
-                    row1 = dataTipTextRow(expr1,'','%s');
-                    expr2 = sprintf(' (% 5.5f % 5.5f % 5.5f)',val(1),val(2),val(3));
-                    row2 = dataTipTextRow(expr2,'','%s');
-                end
-                ln_obj.DataTipTemplate.DataTipRows(1+2*i-1) = row1;
-                ln_obj.DataTipTemplate.DataTipRows(1+2*i) = row2;
             end
             cursor_obj.UserData.withinimage = within_image;
             % cursor_obj.Selected = 1;
+            
         end
         
         % Some KeyPressFcn is defined for figure window and perform 
@@ -1106,24 +1150,26 @@ classdef ImageStackView < handle
                 case 'leftarrow'
                     x_new = cursor_obj.X-dx; y_new = cursor_obj.Y;
                 case 'uparrow'
-                    if strcmp(obj.axim_master.YDir,'reverse')
-                       x_new = cursor_obj.X; y_new = cursor_obj.Y-dy;
-                    else
-                        x_new = cursor_obj.X; y_new = cursor_obj.Y+dy;
-                    end
+                    x_new = cursor_obj.X; y_new = cursor_obj.Y-dy;
+                    % if strcmp(obj.axim_master.YDir,'reverse')
+                    %     
+                    % else
+                    %     x_new = cursor_obj.X; y_new = cursor_obj.Y+dy;
+                    % end
                 case 'downarrow'
-                    if strcmp(obj.axim_master.YDir,'reverse')
-                        x_new = cursor_obj.X; y_new = cursor_obj.Y+dy;
-                    else
-                        x_new = cursor_obj.X; y_new = cursor_obj.Y-dy;
-                    end
+                    x_new = cursor_obj.X; y_new = cursor_obj.Y+dy;
+                    % if strcmp(obj.axim_master.YDir,'reverse')
+                    %     
+                    % else
+                    %     x_new = cursor_obj.X; y_new = cursor_obj.Y-dy;
+                    % end
             end
             obj.image_cursor_update(cursor_obj,x_new,y_new);
             
         end
         
-        function image_cursor_delete_current(obj,hObject,eventData)
-            cursor_obj = hObject;
+        function image_cursor_delete_current(obj,cursor_obj,eventData)
+            % cursor_obj = hObject;
             idx_rm = cursor_obj.UserData.idx;
             N_cursor = length(obj.cursor_list);
             for i=(idx_rm+1):N_cursor
