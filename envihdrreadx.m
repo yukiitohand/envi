@@ -166,19 +166,24 @@ if isfield(info,'pixel_size')
 end
 
 if isfield(info,'wavelength')
-    info.wavelength = sscanf(info.wavelength(2:end-1),'%f,')';
+    % info.wavelength = sscanf(info.wavelength(2:end-1),'%f,')';
+    % strip the curly bracket
+    info.wavelength = envihdr_testsplit_numeric_array(info.wavelength);
 end
 
 if isfield(info,'fwhm')
-    info.fwhm = sscanf(info.fwhm(2:end-1),'%f,')';
+    % info.fwhm = sscanf(info.fwhm(2:end-1),'%f,')';
+    info.fwhm = envihdr_testsplit_numeric_array(info.fwhm);
 end
 
 if isfield(info,'default_bands')
-    info.default_bands = sscanf(info.default_bands(2:end-1),'%d,')';
+    % info.default_bands = sscanf(info.default_bands(2:end-1),'%d,')';
+    info.default_bands = envihdr_testsplit_numeric_array(info.default_bands);
 end
 
 if isfield(info,'bbl')
-    info.bbl = sscanf(info.bbl(2:end-1),'%d,')';
+    % info.bbl = sscanf(info.bbl(2:end-1),'%d,')';
+    info.bbl = envihdr_testsplit_numeric_array(info.bbl);
 end
 
 % function split is only used when replacements above do not work
@@ -189,4 +194,14 @@ end
 %     [t,s] = strtok(s,d);
 %     A = {A{:}, t};
 % end
+end
 
+function [numar] = envihdr_testsplit_numeric_array(str_numar)
+str_numar = regexpi(str_numar,'^\s*\{\s*(?<wv_content>.*)\s*\}\s*$','names');
+str_numar = [str_numar.wv_content ','];
+ptrn_array = '\s*(?<element>[^,]*)\s*,';
+value = regexpi(str_numar,ptrn_array,'names');
+value = {value.element};
+value = str2double(value);
+numar = value;
+end

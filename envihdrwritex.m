@@ -48,7 +48,7 @@ end
 params=fieldnames(hdr_info);
 
 fid = fopen(hdrfile,'w');
-fprintf(fid,'%s\n','ENVI');
+fprintf(fid,'%s\r\n','ENVI');
 
 activeFieldList = {'description','samples','lines','bands','header offset',...
     'file type','data type','interleave','sensor type','byte order',...
@@ -68,7 +68,7 @@ for idx=1:length(params)
     if strcmp(param,'wavelength') || strcmp(param,'fwhm')
         % fwhm is added by Yuki on May 31, 2017
         % output is edited by Yuki on May 31, 2017
-        val_str = sprintf('\n%13.6f,%13.6f,%13.6f,%13.6f,%13.6f,',value);
+        val_str = sprintf('\r\n%13.6f,%13.6f,%13.6f,%13.6f,%13.6f,',value);
         if strcmp(val_str(end),',')
             val_str = val_str(1:end-1);
         end
@@ -95,7 +95,7 @@ for idx=1:length(params)
         for i=1:length(value)
             itm_new = value{i};
             if (length(val_str)+length(itm_new)) > 75
-                val_str = [val_str sprintf('\n %s,',itm_new)];
+                val_str = [val_str sprintf('\r\n %s,',itm_new)];
             else
                 val_str = [val_str itm_new ','];
             end
@@ -108,7 +108,7 @@ for idx=1:length(params)
         for i=1:length(value)
             itm_new = value{i};
             if (length(val_str)+length(itm_new)) > 75
-                val_str = [val_str sprintf('\n %s,',itm_new)];
+                val_str = [val_str sprintf('\r\n %s,',itm_new)];
             else
                 val_str = [val_str itm_new];
             end
@@ -148,7 +148,7 @@ for idx=1:length(params)
     % the cases are created by Yuki Jan. 12, 2015 for customized
     % envihdrread_yuki.m
     if ~isempty(line)
-        fprintf(fid,'%s\n',line);
+        fprintf(fid,'%s\r\n',line);
     end
     
 end
