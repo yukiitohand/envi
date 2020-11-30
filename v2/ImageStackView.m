@@ -83,35 +83,7 @@ classdef ImageStackView < handle
             %--------------------------------------------------------------
             % Load images
             %--------------------------------------------------------------
-            if ~isempty(image_list)
-                if iscell(image_list)
-                    metainfo_image_input = [];
-                    for i=1:length(image_list)
-                        metainfo_image_input(i).class = class(image_list{i});
-                        metainfo_image_input(i).size  =  size(image_list{i});
-                        if strcmpi(metainfo_image_input(i).class,'char')
-                            metainfo_image_input(i).char = image_list{i};
-                        else
-                            metainfo_image_input(i).char = '';
-                        end
-                    end
-                    [i_cdata,i_xdata,i_ydata,i_zdata,i_image_varargin]...
-                        = parse_metainfo_image_input(metainfo_image_input);
-                    if isempty(i_cdata)
-                        Nim = length(image_list);
-                        for i=1:Nim
-                            iflip = Nim-i+1;
-                            obj.add_layer(image_list{iflip}{:});   
-                        end
-                    else
-                        % Nim = 1;
-                        obj.add_layer(image_list{:});  
-                    end
-                else
-                    % Nim = 1;
-                    obj.add_layer(image_list{:});
-                end
-            end
+            obj.decode_image_list(image_list);
             
             
             % Set some aspect Ratios.
@@ -159,6 +131,42 @@ classdef ImageStackView < handle
             % set(hdt,'UpdateFcn',image_cursor_fcn);
             % obj.deleteFcn
             
+        end
+        
+        function decode_image_list(obj,image_list)
+            if ~isempty(image_list)
+                if iscell(image_list)
+                    metainfo_image_input = [];
+                    for i=1:length(image_list)
+                        metainfo_image_input(i).class = class(image_list{i});
+                        metainfo_image_input(i).size  =  size(image_list{i});
+                        if strcmpi(metainfo_image_input(i).class,'char')
+                            metainfo_image_input(i).char = image_list{i};
+                        else
+                            metainfo_image_input(i).char = '';
+                        end
+                    end
+                    [i_cdata,i_xdata,i_ydata,i_zdata,i_image_varargin]...
+                        = parse_metainfo_image_input(metainfo_image_input);
+                    if isempty(i_cdata)
+                        Nim = length(image_list);
+                        for i=1:Nim
+                            iflip = Nim-i+1;
+                            if iscell(image_list{iflip})
+                                obj.add_layer(image_list{iflip}{:});
+                            else
+                                obj.add_layer(image_list{iflip});
+                            end
+                        end
+                    else
+                        % Nim = 1;
+                        obj.add_layer(image_list{:});  
+                    end
+                else
+                    % Nim = 1;
+                    obj.add_layer(image_list{:});
+                end
+            end
         end
         
         %%
@@ -618,10 +626,12 @@ classdef ImageStackView < handle
             % update list of the image
             obj.image = obj.image(idx_c);
             for i=1:(Nim-1)
+                obj.image(i).id = i;
                 if obj.image(i).order > im_ord_idx
                     obj.image(i).order = obj.image(i).order-1;
                 end
             end
+            
 
             % Update the image control panel
             [icp_children] = obj.get_icp_children();
@@ -1049,6 +1059,7 @@ classdef ImageStackView < handle
             
             Nim = length(obj.image);
             within_image = nan(1,Nim);
+            j=0;
             for i=1:Nim
                 if ~obj.image(i).ismask
                     if ((x>obj.image(i).XLimHome(1) && x<obj.image(i).XLimHome(2)) || (x>obj.image(i).XLimHome(2) && x<obj.image(i).XLimHome(1)) )...
@@ -1061,6 +1072,7 @@ classdef ImageStackView < handle
                         x_imi = nan; y_imi = nan; val = nan;
                         within_image(i) = nan;
                     end
+                    j=j+1; % skip mask layers.
                     if length(val)==1
                         % output_txt{end+1} = sprintf('%10s\n (% 6d, % 6d) : % 8.5f',...
                         %         obj.image(i).name,x_imi,y_imi,val);
@@ -1076,8 +1088,8 @@ classdef ImageStackView < handle
                         expr2 = sprintf(' (% 5.5f % 5.5f % 5.5f)',val(1),val(2),val(3));
                         row2 = dataTipTextRow(expr2,'','%s');
                     end
-                    ln_obj.DataTipTemplate.DataTipRows(1+2*i-1) = row1;
-                    ln_obj.DataTipTemplate.DataTipRows(1+2*i) = row2;
+                    ln_obj.DataTipTemplate.DataTipRows(1+2*j-1) = row1;
+                    ln_obj.DataTipTemplate.DataTipRows(1+2*j) = row2;
                 end
             end
             cursor_obj.UserData.withinimage = within_image;

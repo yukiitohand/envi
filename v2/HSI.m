@@ -47,6 +47,7 @@ classdef HSI < handle
         is_bp1nan_inverse = false;
         is_gp1nan_inverse = false;
         fid_img = -1;
+        objRGBImage;
     end
     
     methods
@@ -180,6 +181,73 @@ classdef HSI < handle
         function [] = fclose_img(obj)
             fclose(obj.fid_img);
             obj.fid_img = -1;
+        end
+        
+        function [] = get_rgb(obj,varargin)
+            bands_rgb_tmp = obj.hdr.default_bands;
+            tolrgb = 0.01;
+            if (rem(length(varargin),2)==1)
+                error('Optional parameters should always go by pairs');
+            else
+                for n=1:2:(length(varargin)-1)
+                    switch upper(varargin{n})                        
+                        case 'BANDS'
+                            bands_rgb_tmp = varargin{n+1};
+                        case 'TOLRGB'
+                            tolrgb = varargin{n+1};
+                        otherwise
+                            error('Unrecognized option: %s', varargin{n});
+                    end
+                end
+            end
+            if ~isempty(bands_rgb_tmp)
+                rgbim = obj.lazyEnviReadRGB(bands_rgb_tmp);
+                obj.objRGBImage = RGBImage(rgbim,'Tol',tolrgb);
+                obj.bands_rgb = bands_rgb_tmp;
+            end
+        end
+        
+        function [tf] = isValid_sampleline(obj,smpl,ln)
+            if smpl<1 || smpl>obj.hdr.samples || ln<1 || ln>obj.hdr.lines
+                tf = false;
+            else
+                tf = true;
+            end
+        end
+        
+        function [x_im,y_im] = get_xy_fromNE(obj,x_east,y_north)
+            % if the (x_im,y_im) is outside of the image, then (nan,nan) is
+            % returned.
+            [x_im] = round((x_east-obj.hdr.easting(1))/obj.hdr.map_info.dx + 1);
+            [y_im] = round((obj.hdr.northing(1)-y_north)/obj.hdr.map_info.dy + 1);
+            if ~obj.isValid_sampleline(x_im,y_im)
+                x_im = nan; y_im = nan;
+            end
+        end
+        function [east_x_im,north_y_im] = get_NE_fromxy(obj,x_im,y_im)
+            east_x_im = obj.hdr.easting(x_im);
+            north_y_im = obj.hdr.northing(y_im);
+        end
+        
+        function [xrnge_east,yrnge_north] = get_pixel_rangeNE_fromxy(obj,x_im,y_im)
+            % evaluate overlapping MSLDEM pixels
+            % first evaluate one pixel size
+            [east_x_im,north_y_im] = obj.get_NE_fromxy(x_im,y_im);
+            xrnge_east = [east_x_im-obj.hdr.map_info.dx/2,east_x_im+obj.hdr.map_info.dx/2];
+            yrnge_north = [north_y_im-obj.hdr.map_info.dy/2,north_y_im+obj.hdr.map_info.dy/2];
+        end
+        
+        function [xrnge_east,yrnge_north,x_im,y_im] = get_pixel_rangeNE_fromNE(obj,x_east,y_north)
+            % evaluate overlapping MSLDEM pixels
+            % first evaluate one pixel size
+            [x_im,y_im] = obj.get_xy_fromNE(x_east,y_north);
+            [xrnge_east,yrnge_north] = obj.get_pixel_rangeNE(x_im,y_im);
+        end
+        
+        function delete(obj)
+            if obj.fid_img ~= -1
+                fclose(obj.fid_img);
+            end
         end
         
     end

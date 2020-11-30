@@ -17,6 +17,8 @@ classdef ISVImage < handle
         imobj
         ui_checkbox_visbility
         transparency
+        ismask
+        % NextPlot
     end
     
     methods
@@ -32,6 +34,8 @@ classdef ISVImage < handle
             obj.XLimHome = im_info.xrange;
             obj.YLimHome = im_info.yrange;
             obj.Pixel_Size = im_info.pixel_size;
+            obj.ismask = false;
+            
         end
         
         function [] = imagesc(obj,image_input,ISV_obj)
@@ -44,7 +48,7 @@ classdef ISVImage < handle
             
             obj.imobj = imagesc(obj.ax,image_input{:},'Parent',obj.ax);
 
-            obj.AlphaDataHome = obj.imobj.AlphaData;
+            obj.AlphaDataHome = {obj.imobj.AlphaData};
             
             obj.ax.XLim = ISV_obj.axim_master.XLim;
             obj.ax.YLim = ISV_obj.axim_master.YLim;
@@ -63,7 +67,30 @@ classdef ISVImage < handle
             end
             obj.ax.DataAspectRatio = [1,1,1];
             obj.ax.YDir = ISV_obj.axim_master.YDir;
+            
+            obj.ax.NextPlot = 'add';
+            % addlistener(obj,'NextPlot','PostSet',@obj.Listener_NextPlot);
         end
+        
+        function [imobj_new] = add_children(obj,image_input)            
+            
+            imobj_new = imagesc(image_input{:},'Parent',obj.ax);
+            
+            if ~isempty(obj.imobj)
+                valid_objects = isvalid(obj.imobj);
+                obj.imobj = obj.imobj(valid_objects);
+                obj.AlphaDataHome = obj.AlphaDataHome(valid_objects);
+            end
+            
+            obj.imobj = [obj.imobj imobj_new];
+            
+            ADHnew = imobj_new.AlphaData;
+            obj.AlphaDataHome = [obj.AlphaDataHome,{ADHnew}];
+        end
+        
+        % function Listener_NextPlot(obj,hObject,eventData)
+        %     eventData.ax.NextPlot = obj.NextPlot;
+        % end
 
     end
 end

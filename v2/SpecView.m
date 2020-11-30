@@ -92,6 +92,7 @@ classdef SpecView < handle
             if ~isempty(ax_Position)
                 obj.ax.Position = ax_Position;
             end
+            obj.ax.NextPlot = 'add';
             
         end
         
