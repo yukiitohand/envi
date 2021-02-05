@@ -1,5 +1,5 @@
-function [precision,sizeA] = envihdr_get_precision_sizeA_from_data_type(data_type)
-% [precision,sizeA] = envihdr_get_precision_sizeA_from_data_type(data_type_id)
+function [precision,sizeA,iscx] = envihdr_get_precision_sizeA_from_data_type(data_type)
+% [precision,sizeA,iscx] = envihdr_get_precision_sizeA_from_data_type(data_type_id)
 %  get precision and sizeA (inputs for fread in MATLAB) from data type in
 %  the ENVI heaer file
 
@@ -20,12 +20,12 @@ switch data_type
     case {5}
         sizeA = 8;
         precision= 'double';
-    % case {6}
-    %     iscx=true;
-    %     precision= 'single';
-    % case {9}
-    %     iscx=true;
-    %     precision= 'double';
+    case {6}
+        iscx=true;
+        precision= 'single';
+    case {9}
+        iscx=true;
+        precision= 'double';
     case {12}
         sizeA = 2;
         precision= 'uint16';
