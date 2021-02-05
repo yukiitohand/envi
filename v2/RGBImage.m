@@ -35,6 +35,13 @@ classdef RGBImage < handle
             obj.CData_Scaled = rgb_stretched;
             obj.CLim = lowhigh;
         end
+        
+        function [cval] = get_cval(x,y)
+            cval = obj.CData(y,x,:);
+            if length(cval)==3
+                cval = reshape(cval,[1,3]);
+            end
+        end
 
     end
 end
