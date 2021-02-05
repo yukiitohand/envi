@@ -112,14 +112,16 @@ classdef ImageStackView < handle
                     obj.cursor_xy_label = {'E', 'N'};
                     obj.axim_master.XLabel.String = 'Easting';
                     obj.axim_master.YLabel.String = 'Northing';
-                case 'PLANETOCENTRIC'
+                case 'LATLON'
                     obj.cursor_xy_format = '%6.4f';
-                    obj.cursor_xy_label = {'PLTCLon','Lat'};
-                    obj.axim_master.XLabel.String = 'Planetocentric Longitude';
-                    obj.axim_master.YLabel.String = 'Latitude';
+                    obj.cursor_xy_label = {'Lon','Lat'};
+                    obj.axim_master.XLabel.String = 'Longitude';
+                    obj.axim_master.YLabel.String = 'Planetocentric Latitude';
                 case 'IMAGEPIXELS'
                     obj.cursor_xy_format = '% 6d';
                     obj.cursor_xy_label = {'X','Y'};
+                otherwise
+                    error('Undefined XY_COORDINATE_SYSTEM %s',obj.XY_COORDINATE_SYSTEM);
             end
             
             %--------------------------------------------------------------
