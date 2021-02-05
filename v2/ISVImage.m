@@ -62,8 +62,8 @@ classdef ISVImage < handle
                 obj.ax.CLim = obj.clim;
             end
             if ~isempty(obj.cmap)
-                obj.ax.ColorMap = colormap(obj.cmap);
-                obj.cmap = obj.ax.ColorMap;
+                obj.ax.Colormap = colormap(obj.cmap);
+                obj.cmap = obj.ax.Colormap;
             end
             obj.ax.DataAspectRatio = [1,1,1];
             obj.ax.YDir = ISV_obj.axim_master.YDir;
