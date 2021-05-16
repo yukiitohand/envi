@@ -117,7 +117,7 @@ classdef ENVIRasterMultview < handle
             if isempty(obj.RasterElems)
                 obj.RasterElems = obj_RasterElem;
             else
-                obj.RasterElems = [obj.hsiar obj_RasterElem];
+                obj.RasterElems = [obj.RasterElems obj_RasterElem];
             end
             obj.nRaster = obj.nRaster + length(obj_RasterElem);
         end
