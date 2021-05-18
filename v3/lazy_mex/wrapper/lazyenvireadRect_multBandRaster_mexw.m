@@ -83,45 +83,69 @@ switch lower(precision)
 end
 
 %%
-need_permute = true;
-switch hdr.data_type
-    case 1 % uint8
-        % there is no need for dealing with the endian for uint8
-        [subimg] = lazyenvireadRect_multBandRasterUint8_mex(...
-            imgpath,hdr,sample_offset,line_offset,band_offset,...
-            samplesc,linesc,bandsc);
-    case 2 % int16
-        [subimg] = lazyenvireadRect_multBandRasterInt16_mex(...
-            imgpath,hdr,sample_offset,line_offset,band_offset,...
-            samplesc,linesc,bandsc);
-    case 4 % single (float 32bit)
-        [subimg] = lazyenvireadRect_multBandRasterSingle_mex(...
-            imgpath,hdr,sample_offset,line_offset,band_offset,...
-            samplesc,linesc,bandsc);
-    case 12 % uint16
-        [subimg] = lazyenvireadRect_multBandRasterUint16_mex(...
-            imgpath,hdr,sample_offset,line_offset,band_offset,...
-            samplesc,linesc,bandsc);
-    otherwise
-        % fprintf('Mex not implemented yet for data_type %d.\n',hdr.data_type);
-        srange = [sample_offset+1 sample_offset+samplesc];
-        lrange = [line_offset+1 line_offset+linesc];
-        brange = [band_offset+1 band_offset+bandsc];
-        switch hdr.byte_order
-            case {0}
-                byte_order = 'ieee-le';
-            case {1}
-                byte_order = 'ieee-be';
-            otherwise
-                byte_order = 'n';
-        end
-        subimg = multibandread(imgpath, ...
-            [hdr.lines,hdr.samples,hdr.bands],...
-            [precision_raw '=>' precision_raw],...
-            hdr.header_offset,hdr.interleave, byte_order,...
-            {'Row','Range',lrange},{'Column','Range',srange},...
-            {'Band','Range',brange});
-        need_permute = false;
+if verLessThan('matlab','9.4')
+    % For the version older than , use multibandread always
+    srange = [sample_offset+1 sample_offset+samplesc];
+    lrange = [line_offset+1 line_offset+linesc];
+    brange = [band_offset+1 band_offset+bandsc];
+    switch hdr.byte_order
+        case {0}
+            byte_order = 'ieee-le';
+        case {1}
+            byte_order = 'ieee-be';
+        otherwise
+            byte_order = 'n';
+    end
+    subimg = multibandread(imgpath, ...
+        [hdr.lines,hdr.samples,hdr.bands],...
+        [precision_raw '=>' precision_raw],...
+        hdr.header_offset,hdr.interleave, byte_order,...
+        {'Row','Range',lrange},{'Column','Range',srange},...
+        {'Band','Range',brange});
+    need_permute = false;
+else
+    
+    need_permute = true;
+    switch hdr.data_type
+        case 1 % uint8
+            % there is no need for dealing with the endian for uint8
+            [subimg] = lazyenvireadRect_multBandRasterUint8_mex(...
+                imgpath,hdr,sample_offset,line_offset,band_offset,...
+                samplesc,linesc,bandsc);
+        case 2 % int16
+            [subimg] = lazyenvireadRect_multBandRasterInt16_mex(...
+                imgpath,hdr,sample_offset,line_offset,band_offset,...
+                samplesc,linesc,bandsc);
+        case 4 % single (float 32bit)
+            [subimg] = lazyenvireadRect_multBandRasterSingle_mex(...
+                imgpath,hdr,sample_offset,line_offset,band_offset,...
+                samplesc,linesc,bandsc);
+        case 12 % uint16
+            [subimg] = lazyenvireadRect_multBandRasterUint16_mex(...
+                imgpath,hdr,sample_offset,line_offset,band_offset,...
+                samplesc,linesc,bandsc);
+        otherwise
+            % fprintf('Mex not implemented yet for data_type %d.\n',hdr.data_type);
+            srange = [sample_offset+1 sample_offset+samplesc];
+            lrange = [line_offset+1 line_offset+linesc];
+            brange = [band_offset+1 band_offset+bandsc];
+            switch hdr.byte_order
+                case {0}
+                    byte_order = 'ieee-le';
+                case {1}
+                    byte_order = 'ieee-be';
+                otherwise
+                    byte_order = 'n';
+            end
+            subimg = multibandread(imgpath, ...
+                [hdr.lines,hdr.samples,hdr.bands],...
+                [precision_raw '=>' precision_raw],...
+                hdr.header_offset,hdr.interleave, byte_order,...
+                {'Row','Range',lrange},{'Column','Range',srange},...
+                {'Band','Range',brange});
+            need_permute = false;
+    end
+
 end
 
 % permute the image based on interleave option.
