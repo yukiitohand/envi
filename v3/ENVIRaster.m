@@ -39,7 +39,7 @@ classdef ENVIRaster < handle
             obj.dirpath = dirpath;
             
             if ~isempty(obj.hdrpath)
-                hdr = envihdrreadx(obj.hdrpath);
+                hdr = envihdrreadx2(obj.hdrpath);
                 obj.hdr = hdr;
             end
             obj.fid_img = -1;
