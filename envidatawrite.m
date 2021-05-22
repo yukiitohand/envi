@@ -29,28 +29,39 @@ iscx=false; %if it is complex
 switch info.data_type
     case {1}
         format = 'uint8';
+        D = uint8(D);
     case {2}
         format= 'int16';
+        D = int16(D);
     case{3}
         format= 'int32';
+        D = int32(D);
     case {4}
         format= 'single';
+        D = single(D);
     case {5}
         format= 'double';
+        D = double(D);
     case {6}
         iscx=true;
         format= 'single';
+        D = single(D);
     case {9}
         iscx=true;
         format= 'double';
+        D = double(D);
     case {12}
         format= 'uint16';
+        D = uint16(D);
     case {13}
         format= 'uint32';
+        D = uint32(D);
     case {14}
         format= 'int64';
+        D = int64(D);
     case {15}
         format= 'uint64';
+        D = uint64(D);
     otherwise
         error(['File type number: ',num2str(dtype),' not supported']);
 end
