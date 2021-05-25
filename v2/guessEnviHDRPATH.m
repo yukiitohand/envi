@@ -43,14 +43,21 @@ elseif isunix
     if isempty(hdrname)
         hdrname = [basename '.img.hdr'];
         [hdrname] = findfilei(hdrname,dirPath);
-        if isempty(hdrname) 
-            if iswarning
-                warning('Header file cannot be found');
-            end
-            hdrPath = '';
-        end
     end
-    if ~isempty(hdrname)
+    
+    if isempty(hdrname) 
+        if iswarning
+            warning('Header file cannot be found');
+        end
+        hdrPath = '';
+    else
+        if iscell(hdrname)
+            if all(strcmpi(hdrname{1},hdrname))
+                hdrname = hdrname{1};
+            else
+                error('Ambiguity error. Multiple HDR files are detected.');
+            end
+        end
         hdrPath = joinPath(dirPath,hdrname);
     end
 end

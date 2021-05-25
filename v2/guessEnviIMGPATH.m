@@ -40,12 +40,18 @@ elseif isunix
     if isempty(imgname)
         imgname = basename;
         [imgname] = findfilei(imgname,dirPath);
-        if isempty(imgname)
-           warning('Image file %s cannot be found',basename);
-        end
-        imgPath='';
     end
-    if ~isempty(imgname)
+    if isempty(imgname)
+        warning('Image file %s cannot be found',basename);
+        imgPath='';
+    else
+        if iscell(imgname)
+            if all(strcmpi(imgname{1},imgname))
+                imgname = imgname{1};
+            else
+                error('Ambiguity error. Multiple IMG files are detected.');
+            end
+        end
         imgPath = joinPath(dirPath,imgname);
     end
 end
