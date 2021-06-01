@@ -83,7 +83,7 @@ switch lower(precision)
 end
 
 %%
-if verLessThan('matlab','9.4')
+if verLessThan('matlab','9.4') || ispc()
     % For the version older than , use multibandread always
     srange = [sample_offset+1 sample_offset+samplesc];
     lrange = [line_offset+1 line_offset+linesc];
