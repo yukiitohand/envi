@@ -3,6 +3,10 @@ classdef SphereEquiRectangularProj < handle
     % Spherical radius may be customized.
     % MAP rotation is not supported.
     % 
+    % In this object, % [1,1] is considered as the center of the most upper
+    % left pixel by the class SphereEquiRectangularProj, while in ENVI, 
+    % [1.5 1.5] is considered as the center of the most upper left pixel. 
+    % [1 1] is the upper left vertex of the upper left most pixel.
     properties
         % projection information
         name
@@ -19,10 +23,10 @@ classdef SphereEquiRectangularProj < handle
         rdlat          % <PIXELS/DEGREE>
         map_scale_x    % <METERS/PIXEL>
         map_scale_y    % <METERS/PIXEL>
-        lon1           % longitude at the sample 1 (westernmost sample)
-        lat1           % latitude at the line 1 (most upper line)
-        easting1       % easting at the sample 1
-        northing1      % northing at the line 1
+        lon1           % longitude at the sample 1 (center of the westernmost sample)
+        lat1           % latitude at the line 1 (center of the most upper line)
+        easting1       % easting at the sample 1 (center of the left most pixel)
+        northing1      % northing at the line 1 (center of the most upper pixel)
         Nx
         Ny
     end

@@ -99,6 +99,9 @@ classdef ENVIRasterMultBand < ENVIRaster
             if isempty(obj.hdr)
                 error('no img is found');
             end
+            if any(size(s)~=size(l))
+                error('Input s and l has different shape');
+            end
             spc = lazyenvireadRect_multBandRaster_mexw(...
                 obj.imgpath,obj.hdr,s-1,l-1,0,...
                 1,1,obj.hdr.bands,varargin{:});

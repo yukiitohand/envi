@@ -26,12 +26,14 @@ classdef ENVIRasterMultBandEquirectProjRot0_wGLT < ENVIRasterMultBandEquirectPro
             obj.hdr.data_type  = obj.RasterSource.hdr.data_type;
             obj.hdr.byte_order = obj.RasterSource.hdr.byte_order;
             obj.hdr.bands      = obj.RasterSource.hdr.bands;
-            obj.hdr  = rmfield(obj.hdr,'band_names');
+            if isfield(obj.hdr,'band_names')
+                obj.hdr  = rmfield(obj.hdr,'band_names');
+            end
             if isfield(obj.RasterSource.hdr,'wavelength')
-                obj.hdr.wavlength = obj.RasterSource.hdr.wavelength;
+                obj.hdr.wavelength = obj.RasterSource.hdr.wavelength;
             end
             if isfield(obj.RasterSource.hdr,'wavelength_unit')
-                obj.hdr.wavlength_unit = obj.RasterSource.hdr.wavelength_unit;
+                obj.hdr.wavelength_unit = obj.RasterSource.hdr.wavelength_unit;
             end
         end
         
@@ -169,25 +171,25 @@ classdef ENVIRasterMultBandEquirectProjRot0_wGLT < ENVIRasterMultBandEquirectPro
                 varargin_retIdx = setdiff(1:length(varargin),varargin_rmIdx);
                 varargin = varargin(varargin_retIdx);
             end
-            
+            lint = round(l); sint = round(s);
             switch upper(ave_wndw_domain)
                 case 'PROJECTIVE'
-                    xf = obj.GLTdata.img(l,s,1);
-                    yf = obj.GLTdata.img(l,s,2);
+                    xf = obj.GLTdata.img(lint,sint,1);
+                    yf = obj.GLTdata.img(lint,sint,2);
                     if obj.isValid_sampleline(xf,yf)
                         [spc,wv,bdxes] = ...
                             get_spectrum_ENVIRasterMultBandEquirectProjRot0_wGLT(...
-                            obj,s,l,varargin{:});
+                            obj,sint,lint,varargin{:});
                     else
                         spc = []; wv = []; bdxes = [];
                     end
                     
                 case 'SOURCE'
-                    xf = obj.GLTdata.img(l,s,1);
-                    yf = obj.GLTdata.img(l,s,2);
+                    xf = obj.GLTdata.img(lint,sint,1);
+                    yf = obj.GLTdata.img(lint,sint,2);
                     if obj.isValid_sampleline(xf,yf)
                         [spc,wv,bdxes] = ...
-                            obj.RasterSource.get_spectrum(s,l,varargin{:});
+                            obj.RasterSource.get_spectrum(xf,yf,varargin{:});
                     else
                         spc = []; wv = []; bdxes = [];
                     end

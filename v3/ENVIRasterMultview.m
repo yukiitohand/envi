@@ -1,5 +1,5 @@
 classdef ENVIRasterMultview < handle
-    % HSIview
+    % ENVIRasterMultview
     %   Viewer for spectral image cubes. It basically supports
     %   hyperspectral image cubes but also can be used for viewing
     %   multispectral image cubes.

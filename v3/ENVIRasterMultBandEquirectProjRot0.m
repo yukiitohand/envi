@@ -65,6 +65,36 @@ classdef ENVIRasterMultBandEquirectProjRot0 < ENVIRasterMultBand
             yi = obj.proj_info.get_y_wlat(lat);
         end
         
+        % >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+        % Following methods are added (2021.06.14)
+        % lon/easting ranges are the ranges of longitude/easting of 
+        % [1 hdr.samples]. (the pixel centers of the most left and right
+        % pixels)
+        % lat/northing ranges are the ranges of latitude/northing of 
+        % [1 hdr.lines]. (the pixel centers of the upper and lower most
+        % pixels)
+        function [lat_range] = get_lat_range(obj)
+            lat_range = obj.latitude([1 obj.hdr.lines]);
+        end
+        function [lon_range] = get_lon_range(obj)
+            lon_range = obj.longitude([1 obj.hdr.samples]);
+        end
+        function [estng_range] = get_easting_range(obj)
+            estng_range = obj.easting([1 obj.hdr.samples]);
+        end
+        function [nrthng_range] = get_northing_range(obj)
+            nrthng_range = obj.northing([1 obj.hdr.lines]);
+        end
+        function [lat_range,lon_range] = get_latlon_range(obj)
+            lat_range = obj.get_lat_range();
+            lon_range = obj.get_lon_range();
+        end
+        function [nrthng_range,estng_range] = get_NE_range(obj)
+            [estng_range]  = obj.get_easting_range();
+            [nrthng_range] = obj.get_northing_range();
+        end
+        % <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+        
         function [subimg,xrange,yrange] = get_subimage_wlatlon(obj,...
                 lon_range,lat_range,varargin)
             mrgn = 0;
