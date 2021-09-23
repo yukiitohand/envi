@@ -79,21 +79,21 @@ classdef ENVIRasterMultview < handle
                 if length(hsiar_input)==1
                     if iscell(hsiar_input{1})
                         obj.add_RasterElem(hsiar_input{1}{:});
-                    elseif isa(hsiar_input{1},'ENVIRaster')
+                    elseif isa(hsiar_input{1},'ENVIRaster') || isa(hsiar_input{1},'MASTCAMMSI')
                         obj.add_RasterElem(hsiar_input{:});
                     else
                         error('Input hsiar is not proper.');
                     end
                 elseif length(hsiar_input)>1
                     if isa(hsiar_input{1},'ENVIRaster') ...
-                            && ~isa(hsiar_input{2},'ENVIRaster')
+                            && ~isa(hsiar_input{2},'ENVIRaster') || isa(hsiar_input{1},'MASTCAMMSI')
                         obj.add_RasterElem(hsiar_input{:});
                     else
                         nelem = length(hsiar_input);
                         for i=1:nelem
                             if iscell(hsiar_input{i})
                                 obj.add_RasterElem(hsiar_input{i}{:});
-                            elseif isa(hsiar_input{i},'ENVIRaster')
+                            elseif isa(hsiar_input{i},'ENVIRaster') || isa(hsiar_input{1},'MASTCAMMSI')
                                 obj.add_RasterElem(hsiar_input{i});
                             else
                                 error('Input hsiar is not proper.');

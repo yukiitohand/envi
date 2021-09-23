@@ -116,7 +116,7 @@ for idx=1:length(params)
         val_str = ['{' val_str(1:end-1) '}'];
         line=[param,' = ',val_str];
     elseif strcmp(param,'map info')
-        val_str = sprintf('{%s,%d,%d,%2.13f,%2.13f,%1.15e,%1.15e,%s,units=%s}',...
+        val_str = sprintf('{%s,%d,%d,%2.20f,%2.20f,%1.20e,%1.20e,%s,units=%s}',...
             value.projection,value.image_coords(1),value.image_coords(2),...
             value.mapx,value.mapy,value.dx,value.dy,value.datum,value.units);
         line=[param,' = ',val_str];
@@ -126,6 +126,8 @@ for idx=1:length(params)
         line=[param,' = ',num2str(value)];
     elseif any(strcmpi(param,{'x','y'}))
         line = '';
+    elseif strcmp(param,'coordinate system struct')
+        
     else
         if isnumeric(value) && ~isscalar(value)
             if all(value==floor(value))

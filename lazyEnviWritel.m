@@ -13,7 +13,7 @@ function [ flg ] = lazyEnviWritel( dataFilePath,imgl,hdr_info,l,mode)
 
 switch hdr_info.data_type
     case {1}
-        write_format = 'int8';
+        write_format = 'uint8';
     case {2}
         write_format= 'int16';
     case{3}

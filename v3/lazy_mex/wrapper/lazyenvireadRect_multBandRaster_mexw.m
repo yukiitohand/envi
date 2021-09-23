@@ -15,7 +15,7 @@ function [subimg] = lazyenvireadRect_multBandRaster_mexw(imgpath,hdr,...
 % 
 % OPTIONAL PARAMETERS
 %   "PRECISION": char, string; data type of the output image.
-%       'raw','double', 'single', 'uint8', 'int16', 'int32','int64'
+%       'raw','double', 'single','int8','int16', 'int32','int64'
 %       'uint8','uint16','uint32','uint64'
 %      if 'raw', the data is returned with the original data type of the
 %      image.
@@ -69,7 +69,7 @@ switch lower(precision)
     case {'single','double'}
         if isempty(rep_div), rep_div = true; end
         if rep_div && isempty(repval_div), repval_div = nan; end
-    case {'uint8','uint16','uint32','uint64','int16','int32','int64'}
+    case {'uint8','uint16','uint32','uint64','int8','int16','int32','int64'}
         if isempty(rep_div), rep_div = false; end
         if rep_div && isempty(repval_div)
             fprintf(...
@@ -124,6 +124,10 @@ else
             [subimg] = lazyenvireadRect_multBandRasterUint16_mex(...
                 imgpath,hdr,sample_offset,line_offset,band_offset,...
                 samplesc,linesc,bandsc);
+        case 16 % int8
+            [subimg] = lazyenvireadRect_multBandRasterInt8_mex(...
+                imgpath,hdr,sample_offset,line_offset,band_offset,...
+                samplesc,linesc,bandsc);
         otherwise
             % fprintf('Mex not implemented yet for data_type %d.\n',hdr.data_type);
             srange = [sample_offset+1 sample_offset+samplesc];
@@ -168,6 +172,8 @@ switch lower(precision)
         subimg = double(subimg);
     case 'single'
         subimg = single(subimg);
+    case 'int8'
+        subimg = int8(subimg);
     case 'int16'
         subimg = int16(subimg);
     case 'int32'

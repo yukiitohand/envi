@@ -44,8 +44,8 @@ proj_info = SphereEquiRectangularProj('name',projcs_name,...
     'Latitude_of_origin',latitude_of_origin,...
     'Longitude_of_origin',longitude_of_origin);
 
-pixel_size_x = hdr.map_info_struct.dx;
-pixel_size_y = hdr.map_info_struct.dy;
+pixel_size_x = hdr.map_info.dx;
+pixel_size_y = hdr.map_info.dy;
 
 cos_stdprll = cosd(standard_parallel);
 lat_dstep = pixel_size_y/ (radius*pi) * 180;
@@ -55,8 +55,8 @@ lon_dstep = pixel_size_x/ (radius*pi) * 180 / cos_stdprll;
 % class SphereEquiRectangularProj, while in ENVI, [1.5 1.5] is considered 
 % as the center of the most upper left pixel. [1 1] is the upper left
 % vertex of the upper left most pixel.
-easting1  = hdr.map_info_struct.mapx + (1.5-hdr.map_info_struct.image_coords(1))*pixel_size_x;
-northing1 = hdr.map_info_struct.mapy - (1.5-hdr.map_info_struct.image_coords(2))*pixel_size_y;
+easting1  = hdr.map_info.mapx + (1.5-hdr.map_info.image_coords(1))*pixel_size_x;
+northing1 = hdr.map_info.mapy - (1.5-hdr.map_info.image_coords(2))*pixel_size_y;
 
 proj_info.rdlat = 1./lat_dstep;
 proj_info.rdlon = 1./lon_dstep;

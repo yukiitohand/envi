@@ -114,23 +114,23 @@ if isfield(hdr,'map_info')
     line=strtrim(line);
     %
     
-    map_info_struct = [];
-    map_info_struct.projection = line{1};
-    map_info_struct.image_coords = [str2num(line{2}),str2num(line{3})];
-    map_info_struct.mapx = str2num(line{4});
-    map_info_struct.mapy = str2num(line{5});
-    map_info_struct.dx  = str2num(line{6});
-    map_info_struct.dy  = str2num(line{7});
+    map_info = [];
+    map_info.projection = line{1};
+    map_info.image_coords = [str2num(line{2}),str2num(line{3})];
+    map_info.mapx = str2num(line{4});
+    map_info.mapy = str2num(line{5});
+    map_info.dx  = str2num(line{6});
+    map_info.dy  = str2num(line{7});
     if length(line) == 9
-        map_info_struct.datum  = line{8};
-        map_info_struct.units  = line{9}(7:end);
+        map_info.datum  = line{8};
+        map_info.units  = line{9}(7:end);
     elseif length(line) == 11
-        map_info_struct.zone  = str2num(line{8});
-        map_info_struct.hemi  = line{9};
-        map_info_struct.datum  = line{10};
-        map_info_struct.units  = line{11}(7:end);
+        map_info.zone  = str2num(line{8});
+        map_info.hemi  = line{9};
+        map_info.datum  = line{10};
+        map_info.units  = line{11}(7:end);
     end
-    hdr.map_info_struct = map_info_struct;
+    hdr.map_info = map_info;
     %
 end
 

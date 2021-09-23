@@ -104,7 +104,7 @@ classdef ImageStackView < handle
             set_figsize(obj.fig,w_fig_r,h_fig_r);
             obj.fig.Visible = 1;
             
-            obj.fig.WindowKeyPressFcn = obj.custom_windowkeypress_fcn;
+            set(obj.fig,'WindowKeyPressFcn',@obj.custom_windowkeypress_fcn);
             
             switch obj.XY_COORDINATE_SYSTEM
                 case 'NORTHEAST'
@@ -191,7 +191,8 @@ classdef ImageStackView < handle
             obj.image_panel = uipanel('Parent',obj.fig);
             obj.image_panel.Units = 'pixels';
             obj.image_panel.Position = imp_pos;
-            obj.image_panel.BackgroundColor = [0.8 0.8 0.8];
+            % obj.image_panel.BackgroundColor = [0.8 0.8 0.8];
+            obj.image_panel.BackgroundColor = [1 1 1];
             obj.image_panel.BorderWidth = 0;
             
             obj.axim_master = axes('Parent',obj.image_panel);
@@ -269,7 +270,8 @@ classdef ImageStackView < handle
                  'Position',ich_chckbx_pos,...
                  'String','Hold cursors','Value',false,...
                  'Callback',@obj.Change_image_cursor_hold);
-             obj.image_cursor_hold_chkbox.BackgroundColor = [0.75 0.75 0.75];
+             % obj.image_cursor_hold_chkbox.BackgroundColor = [0.75 0.75 0.75];
+             obj.image_cursor_hold_chkbox.BackgroundColor = [1 1 1];
             
         end
         
@@ -597,8 +599,11 @@ classdef ImageStackView < handle
                 
             end
             
-            obj.Update_ImageAxes_LimHomeAuto();
-            obj.Update_ImageAxes_LimHome();
+            % Only update if nonempty layer is added
+            if ~isempty(isvimage_obj.imobj.CData)
+                obj.Update_ImageAxes_LimHomeAuto();
+                obj.Update_ImageAxes_LimHome();
+            end
             
             isvimage_obj.ax.DataAspectRatio = [1,1,1];
             
@@ -843,7 +848,9 @@ classdef ImageStackView < handle
                 case 0
                     isvimage_obj.ax.Visible = 0;
                     for i=1:length(isvimage_obj.imobj)
-                        isvimage_obj.imobj(i).Visible = 0;
+                        if isvalid(isvimage_obj.imobj(i))
+                            isvimage_obj.imobj(i).Visible = 0;
+                        end
                     end
                     %
                     [icp_children] = obj.get_icp_children();
@@ -854,7 +861,9 @@ classdef ImageStackView < handle
                 case 1
                     isvimage_obj.ax.Visible = 1;
                     for i=1:length(isvimage_obj.imobj)
-                        isvimage_obj.imobj(i).Visible = 1;
+                        if isvalid(isvimage_obj.imobj(i))
+                            isvimage_obj.imobj(i).Visible = 1;
+                        end
                     end
             end
         end

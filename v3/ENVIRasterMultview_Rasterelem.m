@@ -71,7 +71,7 @@ classdef ENVIRasterMultview_Rasterelem < handle
             obj.imszy = rastermb.hdr.lines;
             if isa(obj.Raster, 'ENVIRasterMultBandEquirectProjRot0_wGLT')
                 obj.get_spectrum =  @obj.get_spectrum_RasterMultBandEquirectProjRot0_wGLT;
-            elseif isa(obj.Raster,'ENVIRasterMultBand')
+            elseif isa(obj.Raster,'ENVIRasterMultBand') || isa(obj.Raster,'MASTCAMMSI')
                 obj.get_spectrum =  @obj.get_spectrum_RasterMultBand;
             else
                 error('class %s is not supported for ENVIRasterMultview',...

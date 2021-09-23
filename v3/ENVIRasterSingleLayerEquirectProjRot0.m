@@ -53,6 +53,36 @@ classdef ENVIRasterSingleLayerEquirectProjRot0 < ENVIRasterSingleLayer
             end
         end
         
+        % >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+        % Following methods are added (2021.06.16)
+        % lon/easting ctrranges are the ranges of longitude/easting of 
+        % [1 hdr.samples]. (the pixel centers of the most left and right
+        % pixels)
+        % lat/northing ctrranges are the ranges of latitude/northing of 
+        % [1 hdr.lines]. (the pixel centers of the upper and lower most
+        % pixels)
+        function [lat_range] = get_lat_ctrrange(obj)
+            lat_range = obj.latitude([1 obj.hdr.lines]);
+        end
+        function [lon_range] = get_lon_ctrrange(obj)
+            lon_range = obj.longitude([1 obj.hdr.samples]);
+        end
+        function [estng_range] = get_easting_ctrrange(obj)
+            estng_range = obj.easting([1 obj.hdr.samples]);
+        end
+        function [nrthng_range] = get_northing_ctrrange(obj)
+            nrthng_range = obj.northing([1 obj.hdr.lines]);
+        end
+        function [lat_range,lon_range] = get_latlon_ctrrange(obj)
+            lat_range = obj.get_lat_range();
+            lon_range = obj.get_lon_range();
+        end
+        function [nrthng_range,estng_range] = get_NE_ctrrange(obj)
+            [estng_range]  = obj.get_easting_range();
+            [nrthng_range] = obj.get_northing_range();
+        end
+        % <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+        
         function [xi] = easting2x(obj,estng)
             xi = obj.proj_info.get_x_wEasting(estng);
         end

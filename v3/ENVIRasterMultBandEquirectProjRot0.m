@@ -67,31 +67,31 @@ classdef ENVIRasterMultBandEquirectProjRot0 < ENVIRasterMultBand
         
         % >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
         % Following methods are added (2021.06.14)
-        % lon/easting ranges are the ranges of longitude/easting of 
+        % lon/easting ctrranges are the ranges of longitude/easting of 
         % [1 hdr.samples]. (the pixel centers of the most left and right
         % pixels)
-        % lat/northing ranges are the ranges of latitude/northing of 
+        % lat/northing ctrranges are the ranges of latitude/northing of 
         % [1 hdr.lines]. (the pixel centers of the upper and lower most
         % pixels)
-        function [lat_range] = get_lat_range(obj)
+        function [lat_range] = get_lat_ctrrange(obj)
             lat_range = obj.latitude([1 obj.hdr.lines]);
         end
-        function [lon_range] = get_lon_range(obj)
+        function [lon_range] = get_lon_ctrrange(obj)
             lon_range = obj.longitude([1 obj.hdr.samples]);
         end
-        function [estng_range] = get_easting_range(obj)
+        function [estng_range] = get_easting_ctrrange(obj)
             estng_range = obj.easting([1 obj.hdr.samples]);
         end
-        function [nrthng_range] = get_northing_range(obj)
+        function [nrthng_range] = get_northing_ctrrange(obj)
             nrthng_range = obj.northing([1 obj.hdr.lines]);
         end
-        function [lat_range,lon_range] = get_latlon_range(obj)
-            lat_range = obj.get_lat_range();
-            lon_range = obj.get_lon_range();
+        function [lat_range,lon_range] = get_latlon_ctrrange(obj)
+            lat_range = obj.get_lat_ctrrange();
+            lon_range = obj.get_lon_ctrrange();
         end
-        function [nrthng_range,estng_range] = get_NE_range(obj)
-            [estng_range]  = obj.get_easting_range();
-            [nrthng_range] = obj.get_northing_range();
+        function [nrthng_range,estng_range] = get_NE_ctrrange(obj)
+            [estng_range]  = obj.get_easting_ctrrange();
+            [nrthng_range] = obj.get_northing_ctrrange();
         end
         % <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
         

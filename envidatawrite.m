@@ -27,6 +27,9 @@ end
 
 iscx=false; %if it is complex
 switch info.data_type
+    case {0}
+        format = 'int8';
+        D = int8(D);
     case {1}
         format = 'uint8';
         D = uint8(D);

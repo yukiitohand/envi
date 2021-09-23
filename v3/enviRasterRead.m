@@ -144,6 +144,8 @@ switch lower(precision)
         img = double(img);
     case 'single'
         img = single(img);
+    case 'int8'
+        img = int8(img);
     case 'int16'
         img = int16(img);
     case 'int32'

@@ -2,9 +2,14 @@ function [precision,sizeA,iscx] = envihdr_get_precision_sizeA_from_data_type(dat
 % [precision,sizeA,iscx] = envihdr_get_precision_sizeA_from_data_type(data_type_id)
 %  get precision and sizeA (inputs for fread in MATLAB) from data type in
 %  the ENVI heaer file
+%  A new number 0 is added for supporting int8 type data (this is not 
+%  originally supported in ENVI)
 
 iscx = false;
 switch data_type
+    case {0}
+        sizeA = 1;
+        precision= 'int8';
     case {1}
         sizeA = 1;
         precision = 'uint8';
