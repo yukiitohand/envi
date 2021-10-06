@@ -1,3 +1,4 @@
+function [] = envi_v3_lazy_mex_compile_all()
 % envi_v3_compile_all.m
 fpath_self = mfilename('fullpath');
 [dirpath_self,filename] = fileparts(fpath_self);
@@ -57,3 +58,5 @@ for i=1:length(source_filenames)
 end
 
 fprintf('End of compiling.\n');
+
+end
