@@ -26,34 +26,54 @@ if isempty(dirPath)
     dirPath = './';
 end
 
-if ismac || ispc
-    imgPath = joinPath(dirPath,[basename '.img']);
-    if ~exist(imgPath,'file')
-        if iswarning
-            warning('Image file %s cannot be found.',basename);
-        end
-        imgPath = '';
-    end
-elseif isunix
-    imgname = [basename '.img'];
+imgname = [basename '.img'];
+[imgname] = findfilei(imgname,dirPath);
+if isempty(imgname)
+    imgname = basename;
     [imgname] = findfilei(imgname,dirPath);
-    if isempty(imgname)
-        imgname = basename;
-        [imgname] = findfilei(imgname,dirPath);
-    end
-    if isempty(imgname)
-        warning('Image file %s cannot be found',basename);
-        imgPath='';
-    else
-        if iscell(imgname)
-            if all(strcmpi(imgname{1},imgname))
-                imgname = imgname{1};
-            else
-                error('Ambiguity error. Multiple IMG files are detected.');
-            end
-        end
-        imgPath = joinPath(dirPath,imgname);
-    end
 end
+if isempty(imgname)
+    warning('Image file %s cannot be found',basename);
+    imgPath='';
+else
+    if iscell(imgname)
+        if all(strcmpi(imgname{1},imgname))
+            imgname = imgname{1};
+        else
+            error('Ambiguity error. Multiple IMG files are detected.');
+        end
+    end
+    imgPath = joinPath(dirPath,imgname);
+end
+
+% if ismac || ispc
+%     imgPath = joinPath(dirPath,[basename '.img']);
+%     if ~exist(imgPath,'file')
+%         if iswarning
+%             warning('Image file %s cannot be found.',basename);
+%         end
+%         imgPath = '';
+%     end
+% elseif isunix
+%     imgname = [basename '.img'];
+%     [imgname] = findfilei(imgname,dirPath);
+%     if isempty(imgname)
+%         imgname = basename;
+%         [imgname] = findfilei(imgname,dirPath);
+%     end
+%     if isempty(imgname)
+%         warning('Image file %s cannot be found',basename);
+%         imgPath='';
+%     else
+%         if iscell(imgname)
+%             if all(strcmpi(imgname{1},imgname))
+%                 imgname = imgname{1};
+%             else
+%                 error('Ambiguity error. Multiple IMG files are detected.');
+%             end
+%         end
+%         imgPath = joinPath(dirPath,imgname);
+%     end
+% end
 
 end

@@ -26,40 +26,63 @@ if isempty(dirPath)
     dirPath = './';
 end
 
-if ismac || ispc
-    hdrPath = joinPath(dirPath,[basename '.hdr']);
-    if ~exist(hdrPath,'file')
-        hdrPath = joinPath(dirPath,[basename '.img.hdr']);
-        if ~exist(hdrPath,'file') 
-            if iswarning
-                warning('Header file cannot be found.');
-            end
-            hdrPath = '';
-        end
-    end
-elseif isunix
-    hdrname = [basename '.hdr'];
+hdrname = [basename '.hdr'];
+[hdrname] = findfilei(hdrname,dirPath);
+if isempty(hdrname)
+    hdrname = [basename '.img.hdr'];
     [hdrname] = findfilei(hdrname,dirPath);
-    if isempty(hdrname)
-        hdrname = [basename '.img.hdr'];
-        [hdrname] = findfilei(hdrname,dirPath);
-    end
-    
-    if isempty(hdrname) 
-        if iswarning
-            warning('Header file cannot be found');
-        end
-        hdrPath = '';
-    else
-        if iscell(hdrname)
-            if all(strcmpi(hdrname{1},hdrname))
-                hdrname = hdrname{1};
-            else
-                error('Ambiguity error. Multiple HDR files are detected.');
-            end
-        end
-        hdrPath = joinPath(dirPath,hdrname);
-    end
 end
+
+if isempty(hdrname) 
+    if iswarning
+        warning('Header file cannot be found');
+    end
+    hdrPath = '';
+else
+    if iscell(hdrname)
+        if all(strcmpi(hdrname{1},hdrname))
+            hdrname = hdrname{1};
+        else
+            error('Ambiguity error. Multiple HDR files are detected.');
+        end
+    end
+    hdrPath = joinPath(dirPath,hdrname);
+end
+
+% if ismac || ispc
+%     hdrPath = joinPath(dirPath,[basename '.hdr']);
+%     if ~exist(hdrPath,'file')
+%         hdrPath = joinPath(dirPath,[basename '.img.hdr']);
+%         if ~exist(hdrPath,'file') 
+%             if iswarning
+%                 warning('Header file cannot be found.');
+%             end
+%             hdrPath = '';
+%         end
+%     end
+% elseif isunix
+%     hdrname = [basename '.hdr'];
+%     [hdrname] = findfilei(hdrname,dirPath);
+%     if isempty(hdrname)
+%         hdrname = [basename '.img.hdr'];
+%         [hdrname] = findfilei(hdrname,dirPath);
+%     end
+%     
+%     if isempty(hdrname) 
+%         if iswarning
+%             warning('Header file cannot be found');
+%         end
+%         hdrPath = '';
+%     else
+%         if iscell(hdrname)
+%             if all(strcmpi(hdrname{1},hdrname))
+%                 hdrname = hdrname{1};
+%             else
+%                 error('Ambiguity error. Multiple HDR files are detected.');
+%             end
+%         end
+%         hdrPath = joinPath(dirPath,hdrname);
+%     end
+% end
 
 end
