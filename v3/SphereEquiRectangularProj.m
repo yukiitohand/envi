@@ -138,7 +138,7 @@ classdef SphereEquiRectangularProj < handle
         end
         
         function [x] = get_x_wEasting(obj,easting)
-            x = (easting-obj.easting1) .* obj.map_scale_x + 1;
+            x = (easting-obj.easting1) ./ obj.map_scale_x + 1;
         end
         
         function [y] = get_y_wlat(obj,lat)
@@ -146,7 +146,7 @@ classdef SphereEquiRectangularProj < handle
         end
         
         function [y] = get_y_wNorthing(obj,northing)
-            y = (obj.northing1-northing) .* obj.map_scale_y + 1;
+            y = (obj.northing1-northing) ./ obj.map_scale_y + 1;
         end
         
         function [lon] = easting2lon(obj,easting)
