@@ -139,7 +139,6 @@ int lazyenvireadRect_singleLayerUint8_v2(char *imgpath, EnviHeader hdr,
     
     fid = fopen(imgpath,"rb");
     if(fid==NULL){
-        fclose(fid);
         return -1;
     }
     /* Evaluate if the image header have valid information of the image */

@@ -90,10 +90,8 @@ int lazyenvireadRect_multBandSingle(char *imgpath, EnviHeader hdr,
     size_t N;
     // size_t offset1,offset2,offset2_buf;
     // size_t ss;
-    
     fid = fopen(imgpath,"rb");
     if(fid==NULL){
-        fclose(fid);
         return -1;
     }
     /* Evaluate if the image header have valid information of the image */
@@ -112,7 +110,6 @@ int lazyenvireadRect_multBandSingle(char *imgpath, EnviHeader hdr,
     computer_isLSBF = isComputerLSBF();
     data_isLSBF = !((bool) hdr.byte_order);
     swap_necessary = (computer_isLSBF != data_isLSBF);
-    
     /* Evaluate interleave option */
     switch(hdr.interleave){
         case BSQ :
@@ -151,7 +148,6 @@ int lazyenvireadRect_multBandSingle(char *imgpath, EnviHeader hdr,
             break;
             
     }
-    
     /* skip bands */
     skip_pri = (long int) (d1 * d2 * d3_offset * s);
     fseek(fid,skip_pri,SEEK_CUR);

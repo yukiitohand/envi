@@ -1,5 +1,23 @@
-function [] = envi_v3_lazy_mex_compile_all()
+function [] = envi_v3_lazy_mex_compile_all(varargin)
 % envi_v3_compile_all.m
+
+mexCompileOpt = {};
+if (rem(length(varargin),2)==1)
+    error('Optional parameters should always go by pairs');
+else
+    for i=1:2:(length(varargin)-1)
+        switch upper(varargin{i})
+            case 'MEXCOMPILEOPT'
+                mexCompileOpt = varargin{i+1};
+                if ~iscell(mexCompileOpt)
+                    mexCompileOpt = {mexCompileOpt};
+                end
+            otherwise
+                error('Unrecognized option: %s',varargin{i});
+        end
+    end
+end
+
 fpath_self = mfilename('fullpath');
 [dirpath_self,filename] = fileparts(fpath_self);
 
@@ -52,9 +70,9 @@ for i=1:length(source_filenames)
     filename = source_filenames{i};
     fprintf('Compiling %s ...\n',filename);
     filepath = joinPath(envi_mex_source_path,filename);
-    mex(filepath, '-R2018a', 'CFLAGS="$CFLAGS -Wno-unused-result"', ...
+    mex(filepath, '-R2018a','CFLAGS="$CFLAGS -Wno-unused-result"', ...
         ['-I' envi_mex_include_path], ...
-        '-outdir',out_dir);
+        '-outdir',out_dir, mexCompileOpt{:});
 end
 
 fprintf('End of compiling.\n');

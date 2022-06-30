@@ -81,6 +81,9 @@ switch lower(precision)
         error('Not implemented yet for data_type %s.',precision);
 end
 
+dir_info = dir(imgpath);
+imgfullpath = joinPath(dir_info.folder,dir_info.name);
+
 %%
 if verLessThan('matlab','9.4') || ispc()
     srange = [sample_offset+1 sample_offset+samplesc];
@@ -93,7 +96,7 @@ if verLessThan('matlab','9.4') || ispc()
         otherwise
             byte_order = 'n';
     end
-    subimg = multibandread(imgpath, ...
+    subimg = multibandread(imgfullpath, ...
         [hdr.lines,hdr.samples,hdr.bands],...
         [precision_raw '=>' precision_raw],...
         hdr.header_offset,hdr.interleave, byte_order,...
@@ -105,20 +108,20 @@ else
         case 1 % uint8
             % there is no need for dealing with the endian for uint8
             [subimg] = lazyenvireadRect_singleLayerRasterUint8_mex(...
-                imgpath,hdr,sample_offset,line_offset,samplesc,linesc);
+                imgfullpath,hdr,sample_offset,line_offset,samplesc,linesc);
         case 2 % int16
             [subimg] = lazyenvireadRect_singleLayerRasterInt16_mex(...
-                        imgpath,hdr,sample_offset,line_offset,samplesc,linesc);
+                        imgfullpath,hdr,sample_offset,line_offset,samplesc,linesc);
         case 4 % single (float 32bit)
             [subimg] = lazyenvireadRect_singleLayerRasterSingle_mex(...
-                        imgpath,hdr,sample_offset,line_offset,samplesc,linesc);
+                        imgfullpath,hdr,sample_offset,line_offset,samplesc,linesc);
             % subimg = reshape(subimg,[samplesc,linesc]);
         case 12 % uint16 
             [subimg] = lazyenvireadRect_singleLayerRasterUint16_mex(...
-                        imgpath,hdr,sample_offset,line_offset,samplesc,linesc);
+                        imgfullpath,hdr,sample_offset,line_offset,samplesc,linesc);
         case 16 % int8 
             [subimg] = lazyenvireadRect_singleLayerRasterInt8_mex(...
-                        imgpath,hdr,sample_offset,line_offset,samplesc,linesc);
+                        imgfullpath,hdr,sample_offset,line_offset,samplesc,linesc);
         otherwise
             srange = [sample_offset+1 sample_offset+samplesc];
             lrange = [line_offset+1 line_offset+linesc];
@@ -130,7 +133,7 @@ else
                 otherwise
                     byte_order = 'n';
             end
-            subimg = multibandread(imgpath, ...
+            subimg = multibandread(imgfullpath, ...
                 [hdr.lines,hdr.samples,hdr.bands],...
                 [precision_raw '=>' precision_raw],...
                 hdr.header_offset,hdr.interleave, byte_order,...
