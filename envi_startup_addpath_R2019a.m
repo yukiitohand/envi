@@ -40,10 +40,7 @@ silent_if_not_unique = p.Results.silent_if_not_unique;
 %% Automatically find the path to toolboxes
 fpath_self = mfilename('fullpath');
 [dirpath_self,filename] = fileparts(fpath_self);
-path_ptrn = '(?<parent_dirpath>.*)/(?<toolbox_dirname>[^/]+[/]{0,1})';
-mtch = regexpi(dirpath_self,path_ptrn,'names');
-toolbox_root_dir = mtch.parent_dirpath;
-envi_toolbox_dirname  = mtch.toolbox_dirname;
+[toolbox_root_dir,envi_toolbox_dirname] = fileparts(dirpath_self);
 
 %% Find dependent toolboxes.
 dList = dir(toolbox_root_dir);
@@ -61,23 +58,23 @@ envi_toolbox_dir = fullfile(toolbox_root_dir, envi_toolbox_dirname);
 
 if ~check_path_exist(envi_toolbox_dir, pathCell)
     addpath( ...
-        envi_toolbox_dir                                        , ...
-        fullfile(envi_toolbox_dir,'v2/')                        , ...
-        fullfile(envi_toolbox_dir,'v3/')                        , ...
-        fullfile(envi_toolbox_dir,'v3/lazy_mex/')               , ...
-        fullfile(envi_toolbox_dir,'v3/lazy_mex/wrapper/')         ...
+        envi_toolbox_dir                                     , ...
+        fullfile(envi_toolbox_dir,'v2')                      , ...
+        fullfile(envi_toolbox_dir,'v3')                      , ...
+        fullfile(envi_toolbox_dir,'v3','lazy_mex')           , ...
+        fullfile(envi_toolbox_dir,'v3','lazy_mex','wrapper')   ...
     );
 
     cmp_arch = computer('arch');
     switch cmp_arch
         case 'maci64'
             % For Mac computers
-            envi_mex_build_path = fullfile(envi_toolbox_dir,'v3/lazy_mex/build/maci64/');
+            envi_mex_build_path = fullfile(envi_toolbox_dir,'v3','lazy_mex','build','maci64');
         case 'glnxa64'
             % For Linux/Unix computers with x86-64 architechture
-            envi_mex_build_path = fullfile(envi_toolbox_dir,'v3/lazy_mex/build/glnxa64/');
+            envi_mex_build_path = fullfile(envi_toolbox_dir,'v3','lazy_mex','build','glnxa64');
         case 'win64'
-            envi_mex_build_path = fullfile(envi_toolbox_dir,'v3/lazy_mex/build/win64/');
+            envi_mex_build_path = fullfile(envi_toolbox_dir,'v3','lazy_mex','build','win64');
         otherwise
             error('%s is not supported',cmp_arch);
     end
@@ -133,8 +130,8 @@ function [toolbox_dirpath,toolbox_dirname,Nt] = get_toolbox_dirname( ...
 %     directory name of the toolbox (without versions if exists).
 %   Nt: number of toolboxes detected.
 
-    dirname_ptrn = sprintf('(?<toolbox_dirname>%s(-[\\d\\.]+){0,1}[/]{0,1})',...
-        toolbox_dirname_wover);
+    dirname_ptrn = sprintf('(?<toolbox_dirname>%s(-[\\d\\.]+){0,1}[%s]{0,1})',...
+        toolbox_dirname_wover,filesep);
     mtch_toolbox_dirname = regexpi({dList.name},dirname_ptrn,'names');
     mtchidx = find(not(cellfun('isempty',mtch_toolbox_dirname)));
     toolbox_root_dir = dList(1).folder;

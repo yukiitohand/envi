@@ -21,14 +21,12 @@ end
 fpath_self = mfilename('fullpath');
 [dirpath_self,filename] = fileparts(fpath_self);
 
-idx_sep = strfind(dirpath_self,'envi/v3/lazy_mex/build');
-dirpath_toolbox = dirpath_self(1:idx_sep-1);
+idx_sep = strfind(dirpath_self,fullfile('v3','lazy_mex','build'));
+envi_toolbox_path = dirpath_self(1:idx_sep-1);
 
-envi_toolbox_path = joinPath(dirpath_toolbox, 'envi/');
-
-envi_mex_include_path = joinPath(envi_toolbox_path, 'v3/lazy_mex/include/');
-envi_mex_source_path  = joinPath(envi_toolbox_path, 'v3/lazy_mex/source/');
-envi_mex_outdir_path  = joinPath(envi_toolbox_path, 'v3/lazy_mex/build/');
+envi_mex_include_path = fullfile(envi_toolbox_path, 'v3','lazy_mex','include');
+envi_mex_source_path  = fullfile(envi_toolbox_path, 'v3','lazy_mex','source');
+envi_mex_outdir_path  = fullfile(envi_toolbox_path, 'v3','lazy_mex','build');
 
 % Sorry, these functions are currently not supported for MATLAB 9.3 or
 % earlier. These requires another 
@@ -52,11 +50,11 @@ source_filenames = { ...
 
 switch computer
     case 'MACI64'
-        out_dir = joinPath(envi_mex_outdir_path,'maci64/');
+        out_dir = fullfile(envi_mex_outdir_path,'maci64');
     case 'GLNXA64'
-        out_dir = joinPath(envi_mex_outdir_path,'glnxa64/');
+        out_dir = fullfile(envi_mex_outdir_path,'glnxa64');
     case 'PCWIN64'
-        out_dir = joinPath(envi_mex_outdir_path,'win64/');
+        out_dir = fullfile(envi_mex_outdir_path,'win64');
     otherwise
         error('Undefined computer type %s.\n',computer);
 end
