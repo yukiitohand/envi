@@ -164,7 +164,8 @@ function [toolbox_dirpath,toolbox_dirname,Nt] = get_toolbox_dirname( ...
             end
         end
     else % length(mtchidx)>1
-        toolbox_dirname = {cat(2,mtch_toolbox_dirname{mtchidx}).toolbox_dirname};
+        toolbox_dirname_struct = cat(2,mtch_toolbox_dirname{mtchidx});
+        toolbox_dirname = {toolbox_dirname_struct.toolbox_dirname};
         toolbox_dirpath = cellfun(@(x) fullfile(toolbox_root_dir,x), ...
             toolbox_dirname, 'UniformOutput',false);
         Nt = length(mtchidx);
