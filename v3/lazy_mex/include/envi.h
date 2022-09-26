@@ -74,9 +74,6 @@ EnviHeader mxGetEnviHeader(const mxArray *pm){
     }
     if(mxGetField(pm,0,"data_ignore_value")!=NULL){
         msldem_hdr.data_ignore_value = mxGetScalar(mxGetField(pm,0,"data_ignore_value"));
-    }else{
-        // printf("envi:mexGetEnviHeader data_ignore_value is not defined\n");
-        // mexErrMsgIdAndTxt("envi:mexGetEnviHeader","Struct is not an envi header");
     }
     
     mxFree(interleave_char);
@@ -91,11 +88,9 @@ bool isComputerLSBF(void){
     if (*c) {
         /* little endian */
         return true;
-        //printf("Little endian");
     } else {
         /* big endian */
         return false;
-        // printf("Big endian");
     }
         
 }

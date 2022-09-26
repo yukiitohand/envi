@@ -1,6 +1,6 @@
-/* mex_create_array.h */
-#ifndef MEX_CREATE_ARRAY_H
-#define MEX_CREATE_ARRAY_H
+/* mex_create_array_ltR2018a.h */
+#ifndef MEX_CREATE_ARRAY_LTR2018A_H
+#define MEX_CREATE_ARRAY_LTR2018A_H
 
 #include <stdlib.h>
 #include <stdbool.h>
@@ -13,7 +13,7 @@ double** set_mxDoubleMatrix(const mxArray *pmi){
     double **pm;
     M = mxGetM(pmi); N = mxGetN(pmi);
     pm = (double **) mxMalloc(N*sizeof(double*));
-    pm[0] = mxGetDoubles(pmi);
+    pm[0] = (double *) mxGetData(pmi);
     for(j=1;j<N;j++){
         pm[j] = pm[j-1]+M;
     }
@@ -26,7 +26,7 @@ float** set_mxSingleMatrix(const mxArray *pmi){
     float **pm;
     M = mxGetM(pmi); N = mxGetN(pmi);
     pm = (float **) mxMalloc(N*sizeof(float*));
-    pm[0] = mxGetSingles(pmi);
+    pm[0] = (float *) mxGetData(pmi);
     for(j=1;j<N;j++){
         pm[j] = pm[j-1]+M;
     }
@@ -39,7 +39,7 @@ bool** set_mxLogicalMatrix(const mxArray *pmi){
     bool **pm;
     M = mxGetM(pmi); N = mxGetN(pmi);
     pm = (bool **) mxMalloc(N*sizeof(bool*));
-    pm[0] = mxGetLogicals(pmi);
+    pm[0] = (bool *) mxGetData(pmi);
     for(j=1;j<N;j++){
         pm[j] = pm[j-1]+M;
     }
@@ -52,7 +52,7 @@ uint8_T** set_mxUint8Matrix(const mxArray *pmi){
     uint8_T **pm;
     M = mxGetM(pmi); N = mxGetN(pmi);
     pm = (uint8_T **) mxMalloc(N*sizeof(uint8_T*));
-    pm[0] = mxGetUint8s(pmi);
+    pm[0] = (uint8_T *) mxGetData(pmi);
     for(j=1;j<N;j++){
         pm[j] = pm[j-1]+M;
     }
@@ -65,7 +65,7 @@ uint16_T** set_mxUint16Matrix(const mxArray *pmi){
     uint16_T **pm;
     M = mxGetM(pmi); N = mxGetN(pmi);
     pm = (uint16_T **) mxMalloc(N*sizeof(uint16_T*));
-    pm[0] = mxGetUint16s(pmi);
+    pm[0] = (uint16_T *) mxGetData(pmi);
     for(j=1;j<N;j++){
         pm[j] = pm[j-1]+M;
     }
@@ -78,7 +78,7 @@ int8_T** set_mxInt8Matrix(const mxArray *pmi){
     int8_T **pm;
     M = mxGetM(pmi); N = mxGetN(pmi);
     pm = (int8_T **) mxMalloc(N*sizeof(int8_T*));
-    pm[0] = mxGetInt8s(pmi);
+    pm[0] = (int8_T *) mxGetData(pmi);
     for(j=1;j<N;j++){
         pm[j] = pm[j-1]+M;
     }
@@ -91,7 +91,7 @@ int16_T** set_mxInt16Matrix(const mxArray *pmi){
     int16_T **pm;
     M = mxGetM(pmi); N = mxGetN(pmi);
     pm = (int16_T **) mxMalloc(N*sizeof(int16_T*));
-    pm[0] = mxGetInt16s(pmi);
+    pm[0] = (int16_T *) mxGetData(pmi);
     for(j=1;j<N;j++){
         pm[j] = pm[j-1]+M;
     }
@@ -104,7 +104,7 @@ int32_T** set_mxInt32Matrix(const mxArray *pmi){
     int32_T **pm;
     M = mxGetM(pmi); N = mxGetN(pmi);
     pm = (int32_T **) mxMalloc(N*sizeof(int32_T*));
-    pm[0] = mxGetInt32s(pmi);
+    pm[0] = (int32_T *) mxGetData(pmi);
     for(j=1;j<N;j++){
         pm[j] = pm[j-1]+M;
     }
