@@ -48,7 +48,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include "envi.h"
-#include "mex_create_array.h"
+#include "mex_create_array_ltR2018a.h"
 
 /* main computation routine
  * int lazyenvireadRect_multBandSingle
@@ -432,8 +432,8 @@ void mexFunction( int nlhs, mxArray *plhs[],
 
     /* INPUT 2/3 smpl_skipszlist/smpl_readszlist */
     N_smpl_skipread = (size_t) mxGetNumberOfElements(prhs[2]);
-    smpl_skipszlist_dbl = mxGetDoubles(prhs[2]);
-    smpl_readszlist_dbl = mxGetDoubles(prhs[3]);
+    smpl_skipszlist_dbl = (double*) mxGetData(prhs[2]);
+    smpl_readszlist_dbl = (double*) mxGetData(prhs[3]);
     smpl_skipszlist = (long int*) malloc( (size_t) N_smpl_skipread*sizeof(long int) );
     smpl_readszlist = (size_t*) malloc( (size_t) N_smpl_skipread*sizeof(size_t) );
     for(i=0;i<N_smpl_skipread;i++){
@@ -469,8 +469,8 @@ void mexFunction( int nlhs, mxArray *plhs[],
 
     /* INPUT 4/5 line_skipszlist/line_readszlist */
     N_line_skipread = (size_t) mxGetNumberOfElements(prhs[4]);
-    line_skipszlist_dbl = mxGetDoubles(prhs[4]);
-    line_readszlist_dbl = mxGetDoubles(prhs[5]);
+    line_skipszlist_dbl = (double*) mxGetData(prhs[4]);
+    line_readszlist_dbl = (double*) mxGetData(prhs[5]);
     line_skipszlist = (long int*) malloc( (size_t) N_line_skipread*sizeof(long int) );
     line_readszlist = (size_t*) malloc( (size_t) N_line_skipread*sizeof(size_t) );
     for(i=0;i<N_line_skipread;i++){
@@ -506,8 +506,8 @@ void mexFunction( int nlhs, mxArray *plhs[],
 
     /* INPUT 6/7 band_skipszlist/band_readszlist */
     N_band_skipread = (size_t) mxGetNumberOfElements(prhs[6]);
-    band_skipszlist_dbl = mxGetDoubles(prhs[6]);
-    band_readszlist_dbl = mxGetDoubles(prhs[7]);
+    band_skipszlist_dbl = (double*) mxGetData(prhs[6]);
+    band_readszlist_dbl = (double*) mxGetData(prhs[7]);
     band_skipszlist = (long int*) malloc( (size_t) N_band_skipread*sizeof(long int) );
     band_readszlist = (size_t*) malloc( (size_t) N_band_skipread*sizeof(size_t) );
     for(i=0;i<N_band_skipread;i++){
@@ -565,7 +565,7 @@ void mexFunction( int nlhs, mxArray *plhs[],
             
     }
     plhs[0] = mxCreateNumericArray(3,dims,mxSINGLE_CLASS,mxREAL);
-    subimg = (float) mxGetData(plhs[0]);
+    subimg = (float*) mxGetData(plhs[0]);
     
     /* -----------------------------------------------------------------
      * CALL MAIN COMPUTATION ROUTINE

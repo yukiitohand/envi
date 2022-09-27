@@ -40,24 +40,21 @@ end
 
 switch upper(idx_mode)
     case 'RANGE'
-        if length(b)~=2
-            error('Input b needs to be a two length vector with "Range" mode');
-        end
-        if b(1)>b(2)
-            error('b(1) needs to be smaller than b(2)');
-        end
-        band_offset = b(1)-1; bandsc = b(2)-b(1)+1;
-        imb = lazyenvireadRect_multBandRaster_mexw(imgpath,hdr,...
-            0,0,band_offset,hdr.samples,hdr.lines,bandsc,varargin{:});
+        imb = lazyenvireadRectx_multBandRaster_mexw(imgpath,hdr,...
+            [1 hdr.samples],[1,hdr.lines], b, varargin{:});
     case 'DIRECT'
-        lb = length(b);
-        imb = [];
-        for bi = 1:lb
-            imbi = lazyenvireadRect_multBandRaster_mexw(...
-                imgpath,hdr,...
-                0,0,b(bi)-1,hdr.samples,hdr.lines,1,varargin{:});
-            imb = cat(3,imb,imbi);
-        end
+        brange = ind2rangelist(b);
+        imb = lazyenvireadRectx_multBandRaster_mexw(imgpath,hdr,...
+            [1 hdr.samples],[1,hdr.lines], brange, varargin{:});
+%         
+%         lb = length(b);
+%         imb = [];
+%         for bi = 1:lb
+%             imbi = lazyenvireadRect_multBandRaster_mexw(...
+%                 imgpath,hdr,...
+%                 0,0,b(bi)-1,hdr.samples,hdr.lines,1,varargin{:});
+%             imb = cat(3,imb,imbi);
+%         end
     otherwise
         error('Undefined INDEX_MODE %s',idx_mode);
 end
