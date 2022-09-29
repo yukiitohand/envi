@@ -21,8 +21,7 @@ end
 fpath_self = mfilename('fullpath');
 [dirpath_self,filename] = fileparts(fpath_self);
 
-idx_sep = strfind(dirpath_self,fullfile('v3','lazy_mex','build'));
-envi_toolbox_path = dirpath_self(1:idx_sep-1);
+envi_toolbox_path = dirpath_self;
 
 envi_mex_include_path = fullfile(envi_toolbox_path, 'v3','lazy_mex','include');
 envi_mex_source_path  = fullfile(envi_toolbox_path, 'v3','lazy_mex','source');
