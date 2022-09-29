@@ -67,7 +67,7 @@ end
 for i=1:length(source_filenames)
     filename = source_filenames{i};
     fprintf('Compiling %s ...\n',filename);
-    filepath = joinPath(envi_mex_source_path,filename);
+    filepath = fullfile(envi_mex_source_path,filename);
     mex(filepath, '-R2018a','CFLAGS="$CFLAGS -Wno-unused-result"', ...
         ['-I' envi_mex_include_path], ...
         '-outdir',out_dir, mexCompileOpt{:});
