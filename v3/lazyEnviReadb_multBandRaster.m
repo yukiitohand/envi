@@ -40,11 +40,11 @@ end
 
 switch upper(idx_mode)
     case 'RANGE'
-        imb = lazyenvireadRectx_multBandRaster_mexw(imgpath,hdr,...
+        imb = lazyenvireadRectxv2_multBandRaster_mexw(imgpath,hdr,...
             [1 hdr.samples],[1,hdr.lines], b, varargin{:});
     case 'DIRECT'
         brange = ind2rangelist(b);
-        imb = lazyenvireadRectx_multBandRaster_mexw(imgpath,hdr,...
+        imb = lazyenvireadRectxv2_multBandRaster_mexw(imgpath,hdr,...
             [1 hdr.samples],[1,hdr.lines], brange, varargin{:});
 %         
 %         lb = length(b);

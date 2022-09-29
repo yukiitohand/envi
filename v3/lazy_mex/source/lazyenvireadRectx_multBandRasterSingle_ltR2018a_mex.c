@@ -192,10 +192,6 @@ int lazyenvireadRectx_multBandSingle(char *imgpath, EnviHeader hdr,
             break;
             
     }
-    /* skip bands */
-    skip_pri = (long int) (d1 * d2 * d3_skipszlist[0] * s);
-    fseek(fid,skip_pri,SEEK_CUR);
-
 
     /* read the data from the file */
     N = d1*d2;

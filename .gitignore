@@ -1,4 +1,4 @@
 *.mat
 *.m~
 *.asv
-*.mexmaci64
+*.DS_Store

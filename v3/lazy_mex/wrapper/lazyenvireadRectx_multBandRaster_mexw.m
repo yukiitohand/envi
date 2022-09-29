@@ -91,122 +91,82 @@ imgfullpath = fullfile(dir_info.folder,dir_info.name);
 [band_skipszlist,band_readszlist] = rangelist2skipreadsizelist(band_rangelist);
 
 %%
-if verLessThan('matlab','9.4') || ispc()
-    
-    need_permute = true;
-    switch hdr.data_type
-        case 1 % uint8
-            % there is no need for dealing with the endian for uint8
-            [subimg] = lazyenvireadRectx_multBandRasterUint8_ltR2018a_mex(...
-                imgfullpath,hdr,sample_skipszlist,sample_readszlist, ...
-                line_skipszlist,line_readszlist, ...
-                band_skipszlist,band_readszlist);
-        case 2 % int16
-            [subimg] = lazyenvireadRectx_multBandRasterInt16_ltR2018a_mex(...
-                imgfullpath,hdr,sample_skipszlist,sample_readszlist, ...
-                line_skipszlist,line_readszlist, ...
-                band_skipszlist,band_readszlist);
-        case 4 % single (float 32bit)
-            [subimg] = lazyenvireadRectx_multBandRasterSingle_ltR2018a_mex(...
-                imgfullpath,hdr,sample_skipszlist,sample_readszlist, ...
-                line_skipszlist,line_readszlist, ...
-                band_skipszlist,band_readszlist);
-        case 12 % uint16
-            [subimg] = lazyenvireadRectx_multBandRasterUint16_ltR2018a_mex(...
-                imgfullpath,hdr,sample_skipszlist,sample_readszlist, ...
-                line_skipszlist,line_readszlist, ...
-                band_skipszlist,band_readszlist);
-        case 16 % int8
-            [subimg] = lazyenvireadRectx_multBandRasterInt8_ltR2018a_mex(...
-                imgfullpath,hdr,sample_skipszlist,sample_readszlist, ...
-                line_skipszlist,line_readszlist, ...
-                band_skipszlist,band_readszlist);
-        otherwise
-            fprintf('Mex not implemented yet for data_type %d.\n',hdr.data_type);
-            % sindxes = 
-            % lindxes = ;
-            % bindxes = ;
-%             switch hdr.byte_order
-%                 case {0}
-%                     byte_order = 'ieee-le';
-%                 case {1}
-%                     byte_order = 'ieee-be';
-%                 otherwise
-%                     byte_order = 'n';
-%             end
-%             subimg = multibandread(imgfullpath, ...
-%                 [hdr.lines,hdr.samples,hdr.bands],...
-%                 [precision_raw '=>' precision_raw],...
-%                 hdr.header_offset,hdr.interleave, byte_order,...
-%                 {'Row','Direct',lrange},{'Column','Direct',srange},...
-%                 {'Band','Direct',brange});
-%             need_permute = false;
-    end
+if ispc()
 else
-    need_permute = true;
-    switch hdr.data_type
-        case 1 % uint8
-            % there is no need for dealing with the endian for uint8
-            [subimg] = lazyenvireadRectx_multBandRasterUint8_mex(...
-                imgfullpath,hdr,sample_skipszlist,sample_readszlist, ...
-                line_skipszlist,line_readszlist, ...
-                band_skipszlist,band_readszlist);
-        case 2 % int16
-            [subimg] = lazyenvireadRectx_multBandRasterInt16_mex(...
-                imgfullpath,hdr,sample_skipszlist,sample_readszlist, ...
-                line_skipszlist,line_readszlist, ...
-                band_skipszlist,band_readszlist);
-        case 4 % single (float 32bit)
-            [subimg] = lazyenvireadRectx_multBandRasterSingle_mex(...
-                imgfullpath,hdr,sample_skipszlist,sample_readszlist, ...
-                line_skipszlist,line_readszlist, ...
-                band_skipszlist,band_readszlist);
-        case 12 % uint16
-            [subimg] = lazyenvireadRectx_multBandRasterUint16_mex(...
-                imgfullpath,hdr,sample_skipszlist,sample_readszlist, ...
-                line_skipszlist,line_readszlist, ...
-                band_skipszlist,band_readszlist);
-        case 16 % int8
-            [subimg] = lazyenvireadRectx_multBandRasterInt8_mex(...
-                imgfullpath,hdr,sample_skipszlist,sample_readszlist, ...
-                line_skipszlist,line_readszlist, ...
-                band_skipszlist,band_readszlist);
-        otherwise
-            fprintf('Mex not implemented yet for data_type %d.\n',hdr.data_type);
-%             srange = [sample_offset+1 sample_offset+samplesc];
-%             lrange = [line_offset+1 line_offset+linesc];
-%             brange = [band_offset+1 band_offset+bandsc];
-%             switch hdr.byte_order
-%                 case {0}
-%                     byte_order = 'ieee-le';
-%                 case {1}
-%                     byte_order = 'ieee-be';
-%                 otherwise
-%                     byte_order = 'n';
-%             end
-%             subimg = multibandread(imgfullpath, ...
-%                 [hdr.lines,hdr.samples,hdr.bands],...
-%                 [precision_raw '=>' precision_raw],...
-%                 hdr.header_offset,hdr.interleave, byte_order,...
-%                 {'Row','Range',lrange},{'Column','Range',srange},...
-%                 {'Band','Range',brange});
-%             need_permute = false;
+    if verLessThan('matlab','9.4')
+        need_permute = true;
+        switch hdr.data_type
+            case {1 2 4 12 16} % uint8 int16 single (float 32bit) uint16 int8
+                [subimg] = lazyenvireadRectxv2_multBandRaster_ltR2018a_mex(...
+                    imgfullpath,hdr,sample_skipszlist,sample_readszlist, ...
+                    line_skipszlist,line_readszlist, ...
+                    band_skipszlist,band_readszlist);
+            otherwise
+                fprintf('Mex not implemented yet for data_type %d.\n',hdr.data_type);
+                % sindxes = 
+                % lindxes = ;
+                % bindxes = ;
+    %             switch hdr.byte_order
+    %                 case {0}
+    %                     byte_order = 'ieee-le';
+    %                 case {1}
+    %                     byte_order = 'ieee-be';
+    %                 otherwise
+    %                     byte_order = 'n';
+    %             end
+    %             subimg = multibandread(imgfullpath, ...
+    %                 [hdr.lines,hdr.samples,hdr.bands],...
+    %                 [precision_raw '=>' precision_raw],...
+    %                 hdr.header_offset,hdr.interleave, byte_order,...
+    %                 {'Row','Direct',lrange},{'Column','Direct',srange},...
+    %                 {'Band','Direct',brange});
+    %             need_permute = false;
+        end
+    else
+        need_permute = true;
+        switch hdr.data_type
+            case {1 2 4 12 16} % uint8 int16 single (float 32bit) uint16 int8
+                [subimg] = lazyenvireadRectxv2_multBandRaster_mex(...
+                    imgfullpath,hdr,sample_skipszlist,sample_readszlist, ...
+                    line_skipszlist,line_readszlist, ...
+                    band_skipszlist,band_readszlist);
+            otherwise
+                fprintf('Mex not implemented yet for data_type %d.\n',hdr.data_type);
+                % sindxes = 
+                % lindxes = ;
+                % bindxes = ;
+    %             switch hdr.byte_order
+    %                 case {0}
+    %                     byte_order = 'ieee-le';
+    %                 case {1}
+    %                     byte_order = 'ieee-be';
+    %                 otherwise
+    %                     byte_order = 'n';
+    %             end
+    %             subimg = multibandread(imgfullpath, ...
+    %                 [hdr.lines,hdr.samples,hdr.bands],...
+    %                 [precision_raw '=>' precision_raw],...
+    %                 hdr.header_offset,hdr.interleave, byte_order,...
+    %                 {'Row','Direct',lrange},{'Column','Direct',srange},...
+    %                 {'Band','Direct',brange});
+    %             need_permute = false;
+        end
+    
     end
-
-end
-
-% permute the image based on interleave option.
-if need_permute
-    switch lower(hdr.interleave)
-        case {'bsq'}
-            % subimg = reshape(subimg,[samplesc,linesc,bandsc]);
-            subimg = permute(subimg,[2,1,3]);
-        case {'bil'}
-            % subimg = reshape(subimg,[samplesc,bandsc,linesc]);
-            subimg = permute(subimg,[3,1,2]);
-        case {'bip'}
-            % subimg = reshape(subimg,[bandsc,samplesc,linesc]);
-            subimg = permute(subimg,[3,2,1]);
+    
+    % permute the image based on interleave option.
+    if need_permute
+        switch lower(hdr.interleave)
+            case {'bsq'}
+                % subimg = reshape(subimg,[samplesc,linesc,bandsc]);
+                subimg = permute(subimg,[2,1,3]);
+            case {'bil'}
+                % subimg = reshape(subimg,[samplesc,bandsc,linesc]);
+                subimg = permute(subimg,[3,1,2]);
+            case {'bip'}
+                % subimg = reshape(subimg,[bandsc,samplesc,linesc]);
+                subimg = permute(subimg,[3,2,1]);
+        end
     end
 end
 

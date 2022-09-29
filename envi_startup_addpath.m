@@ -57,23 +57,33 @@ if ~check_path_exist(envi_toolbox_dir, pathCell)
     );
 
     cmp_arch = computer('arch');
+    
+    if verLessThan('matlab','9.4')
+        api = 'r2018a';
+    else
+        api = 'r2017b';
+    end
+
     switch cmp_arch
         case 'maci64'
             % For Mac computers
             envi_mex_build_path = fullfile(envi_toolbox_dir,'v3','lazy_mex','build','maci64');
+            envi_mex_build_path2 = fullfile(envi_toolbox_dir,'v3','lazy_mex','build','maci64',api);
         case 'glnxa64'
             % For Linux/Unix computers with x86-64 architechture
             envi_mex_build_path = fullfile(envi_toolbox_dir,'v3','lazy_mex','build','glnxa64');
+            envi_mex_build_path2 = fullfile(envi_toolbox_dir,'v3','lazy_mex','build','glnxa64',api);
         case 'win64'
             envi_mex_build_path = fullfile(envi_toolbox_dir,'v3','lazy_mex','build','win64');
+            envi_mex_build_path2 = fullfile(envi_toolbox_dir,'v3','lazy_mex','build','win64',api);
         otherwise
             error('%s is not supported',cmp_arch);
     end
 
     if exist(envi_mex_build_path,'dir')
-        addpath(envi_mex_build_path);
+        addpath(envi_mex_build_path,envi_mex_build_path2);
     else
-        addpath(envi_mex_build_path);
+        addpath(envi_mex_build_path,envi_mex_build_path2);
         fprintf('Run envi/v3/lazy_mex/build/envi_v3_lazy_mex_compile_all.m to compile C/MEX sources.\n');
     end
 end
