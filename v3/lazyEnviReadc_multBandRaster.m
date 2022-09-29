@@ -46,17 +46,23 @@ switch upper(idx_mode)
         if c(1)>c(2)
             error('c(1) needs to be smaller than c(2)');
         end
-        sample_offset = c(1)-1; samplesc = c(2)-c(1)+1;
-        imc = lazyenvireadRect_multBandRaster_mexw(imgpath,hdr,...
-            sample_offset,0,0,samplesc,hdr.lines,hdr.bands,varargin{:});
+        imc = lazyenvireadRectxv2_multBandRaster_mexw(imgpath,hdr,...
+            c,[1 hdr.lines],[1 hdr.bands],varargin{:});
     case 'DIRECT'
-        lc = length(c);
-        imc = [];
-        for ci = 1:lc
-            imci = lazyenvireadRect_multBandRaster_mexw(imgpath,hdr,...
-                c(ci)-1,0,0,1,hdr.lines,hdr.bands,varargin{:});
-            imc = cat(2,imc,imci);
+        if issorted(c)
+            crange = ind2rangelist(c);
+            imc = lazyenvireadRectxv2_multBandRaster_mexw(imgpath,hdr,...
+                crange,[1,hdr.lines], [1 hdr.bands], varargin{:});
+        else
+            [c_sortd,~] = sort(c);
+            crange = ind2rangelist(c_sortd);
+            imc = lazyenvireadRectxv2_multBandRaster_mexw(imgpath,hdr,...
+                crange,[1,hdr.lines], [1 hdr.bands], varargin{:});
+            indx_out = rangelist2ind(crange);
+            [~,rindx_mapper] = ismember(c,indx_out); % this is to deal with duplications.
+            imc = imc(:,rindx_mapper,:);
         end
+        
     otherwise
         error('Undefined INDEX_MODE %s',idx_mode);
 end

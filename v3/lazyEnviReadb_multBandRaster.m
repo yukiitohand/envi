@@ -43,18 +43,19 @@ switch upper(idx_mode)
         imb = lazyenvireadRectxv2_multBandRaster_mexw(imgpath,hdr,...
             [1 hdr.samples],[1,hdr.lines], b, varargin{:});
     case 'DIRECT'
-        brange = ind2rangelist(b);
-        imb = lazyenvireadRectxv2_multBandRaster_mexw(imgpath,hdr,...
-            [1 hdr.samples],[1,hdr.lines], brange, varargin{:});
-%         
-%         lb = length(b);
-%         imb = [];
-%         for bi = 1:lb
-%             imbi = lazyenvireadRect_multBandRaster_mexw(...
-%                 imgpath,hdr,...
-%                 0,0,b(bi)-1,hdr.samples,hdr.lines,1,varargin{:});
-%             imb = cat(3,imb,imbi);
-%         end
+        if issorted(b)
+            brange = ind2rangelist(b);
+            imb = lazyenvireadRectxv2_multBandRaster_mexw(imgpath,hdr,...
+                [1 hdr.samples],[1,hdr.lines], brange, varargin{:});
+        else
+            [b_sortd,~] = sort(b);
+            brange = ind2rangelist(b_sortd);
+            imb = lazyenvireadRectxv2_multBandRaster_mexw(imgpath,hdr,...
+                [1 hdr.samples],[1,hdr.lines], brange, varargin{:});
+            indx_out = rangelist2ind(brange);
+            [~,rindx_mapper] = ismember(b,indx_out); % this is to deal with duplications.
+            imb = imb(:,:,rindx_mapper);
+        end
     otherwise
         error('Undefined INDEX_MODE %s',idx_mode);
 end

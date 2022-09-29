@@ -79,9 +79,9 @@ classdef ENVIRasterMultBand < ENVIRaster
             if isempty(obj.hdr)
                 error('no img is found');
             end
-            img = lazyenvireadRect_multBandRaster_mexw(...
-                obj.imgpath,obj.hdr,0,0,0,...
-                obj.hdr.samples,obj.hdr.lines,obj.hdr.bands,varargin{:});
+            img = lazyenvireadRectxv2_multBandRaster_mexw(...
+                obj.imgpath,obj.hdr,[1 obj.hdr.samples],[1 obj.hdr.lines], ...
+                [1,obj.hdr.bands],varargin{:});
             if nargout<1
                 obj.img = img;
                 obj.is_img_band_inverse = false;
@@ -102,11 +102,8 @@ classdef ENVIRasterMultBand < ENVIRaster
             if any(size(s)~=size(l))
                 error('Input s and l has different shape');
             end
-            spc = lazyenvireadRect_multBandRaster_mexw(...
-                obj.imgpath,obj.hdr,s-1,l-1,0,...
-                1,1,obj.hdr.bands,varargin{:});
-            % spc = spc(:);
-            % spc = lazyEnviRead_v2(obj.imgpath,obj.hdr,s,l);
+            spc = lazyenvireadRectxv2_multBandRaster_mexw(...
+                obj.imgpath,obj.hdr,[s s],[l l],[1,obj.hdr.bands],varargin{:});
         end
         
         function spc = lazyEnviReadi(obj,s,l,varargin)
@@ -119,7 +116,6 @@ classdef ENVIRasterMultBand < ENVIRaster
             end
             imb = lazyEnviReadb_multBandRaster(obj.imgpath,obj.hdr,b,...
                 varargin{:});
-            % imb = lazyEnviReadb_v2(obj.imgpath,obj.hdr,b);
         end
         function imb = lazyEnviReadbi(obj,b,varargin)
             b = obj.hdr.bands-b+1;
@@ -131,7 +127,6 @@ classdef ENVIRasterMultBand < ENVIRaster
             end
             imc = lazyEnviReadc_multBandRaster(obj.imgpath,obj.hdr,c,...
                 varargin{:});
-            % imc = lazyEnviReadc_v2(obj.imgpath,obj.hdr,c);
         end
         function imc = lazyEnviReadci(obj,c,varargin)
             imc = obj.lazyEnviReadc(c,varargin{:});
@@ -176,13 +171,8 @@ classdef ENVIRasterMultBand < ENVIRaster
                 error('Either of the range is not in the right order');
             end
             
-            sample_offset = xrange(1)-1; line_offset = yrange(1)-1;
-            band_offset = zrange(1)-1;
-            samplesc = xrange(2)-xrange(1)+1; linesc = yrange(2)-yrange(1)+1;
-            bandsc = zrange(2)-zrange(1)+1;
-            [subimg] = lazyenvireadRect_multBandRaster_mexw(...
-                obj.imgpath,obj.hdr,sample_offset,line_offset,...
-                band_offset,samplesc,linesc,bandsc,varargin{:});
+            [subimg] = lazyenvireadRectxv2_multBandRaster_mexw(...
+                obj.imgpath,obj.hdr,xrange,yrange,zrange,varargin{:});
         end
         
         function [subimg] = get_subimage_wPixelRangei(obj,xrange,yrange,...
