@@ -68,9 +68,9 @@ if ~check_path_exist(envi_toolbox_dir, pathCell)
     cmp_arch = computer('arch');
     
     if verLessThan('matlab','9.4')
-        api = 'r2018a';
-    else
         api = 'r2017b';
+    else
+        api = 'r2018a';
     end
 
     switch cmp_arch
