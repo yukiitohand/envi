@@ -55,6 +55,7 @@ while true
         eqsn = findstr(line,'=');
         if ~isempty(eqsn)
             param = strtrim(line(1:eqsn-1));
+            param(findstr(param,':')) = '_';
             param(findstr(param,' ')) = '_';
             param(findstr(param,'(')) = '';
             param(findstr(param,')')) = '';
