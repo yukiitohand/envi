@@ -295,7 +295,7 @@ int image_byteswapFloat(float *img, size_t *dims_img, int32_t byte_order)
 
 int image_byteswapInt16(int16_t *img, size_t *dims_img, int32_t byte_order)
 {
-    int8_t swapped;
+    int16_t swapped;
     bool computer_isLSBF;
     bool data_isLSBF;
     bool swap_necessary;
@@ -319,7 +319,7 @@ int image_byteswapInt16(int16_t *img, size_t *dims_img, int32_t byte_order)
 
 int image_byteswapUint16(uint16_t *img, size_t *dims_img, int32_t byte_order)
 {
-    int8_t swapped;
+    uint16_t swapped;
     bool computer_isLSBF;
     bool data_isLSBF;
     bool swap_necessary;
