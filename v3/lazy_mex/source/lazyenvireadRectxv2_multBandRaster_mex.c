@@ -336,41 +336,48 @@ void mexFunction( int nlhs, mxArray *plhs[],
             break;
             
     }
-    plhs[0] = mxCreateNumericArray(3,dims,mxSINGLE_CLASS,mxREAL);
-    subimg = mxGetData(plhs[0]);
-
-    dims_size_t[0] = (size_t) dims[0];
-    dims_size_t[1] = (size_t) dims[1];
-    dims_size_t[2] = (size_t) dims[2];
+    
+    
     
     /* -----------------------------------------------------------------
      * CALL MAIN COMPUTATION ROUTINE
      * ----------------------------------------------------------------- */
+    switch(hdr.data_type){
+        case 1:
+            plhs[0] = mxCreateNumericArray(3,dims,mxUINT8_CLASS,mxREAL);
+            sz = sizeof(uint8_t);
+            break;
+        case 2:
+            plhs[0] = mxCreateNumericArray(3,dims,mxINT16_CLASS,mxREAL);
+            sz = sizeof(int16_t);
+            break;
+        case 4:
+            plhs[0] = mxCreateNumericArray(3,dims,mxSINGLE_CLASS,mxREAL);
+            sz = sizeof(float);
+            break;
+        case 12:
+            plhs[0] = mxCreateNumericArray(3,dims,mxUINT16_CLASS,mxREAL);
+            sz = sizeof(uint16_t);
+            break;
+        case 16:
+            plhs[0] = mxCreateNumericArray(3,dims,mxINT8_CLASS,mxREAL);
+            sz = sizeof(int8_t);
+            break;
+        default:
+            mexErrMsgIdAndTxt(
+                "lazyenvireadRectxv2_multBandRaster_mex:"
+                "UnsupportedDataType",
+                "data_type=%d is not supported.",hdr.data_type);
+    }
     if(mxIsEmpty(plhs[0])){
         errflg = 0;
     } else {
-        switch(hdr.data_type){
-            case 1:
-                sz = sizeof(uint8_t);
-                break;
-            case 2:
-                sz = sizeof(int16_t);
-                break;
-            case 4:
-                sz = sizeof(float);
-                break;
-            case 12:
-                sz = sizeof(uint16_t);
-                break;
-            case 16:
-                sz = sizeof(int8_t);
-                break;
-            default:
-                mexErrMsgIdAndTxt(
-                    "lazyenvireadRectxv2_multBandRaster_mex:"
-                    "UnsupportedDataType",
-                    "data_type=%d is not supported.",hdr.data_type);
-        }
+        subimg = mxGetData(plhs[0]);
+
+        dims_size_t[0] = (size_t) dims[0];
+        dims_size_t[1] = (size_t) dims[1];
+        dims_size_t[2] = (size_t) dims[2];
+
         errflg = lazyenvireadRectx_multBand(imgpath, hdr, 
             smpl_skipszlist, smpl_readszlist, 
             N_smpl_skipread, smpl_skip_last,
@@ -379,7 +386,7 @@ void mexFunction( int nlhs, mxArray *plhs[],
             band_skipszlist, band_readszlist,
             N_band_skipread, band_skip_last,
             subimg, dims_size_t, sz);
-        
+    
     }
     
     if(errflg==0){

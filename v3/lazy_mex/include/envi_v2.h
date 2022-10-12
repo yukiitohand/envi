@@ -24,7 +24,7 @@ typedef struct EnviHeader {
     double data_ignore_value;
 } EnviHeader ;
 
-EnviHeader mxGetEnviHeader(const mxArray *pm);
+extern EnviHeader mxGetEnviHeader(const mxArray *pm);
 extern bool isComputerLSBF(void);
 
 /* function : swapFloat_shuffle 
