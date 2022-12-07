@@ -31,9 +31,12 @@ envi_mex_libdir_path  = fullfile(envi_toolbox_path, 'v3','lazy_mex','lib');
 % Sorry, these functions are currently not supported for MATLAB 9.3 or
 % earlier. These requires another 
 if verLessThan('matlab','9.4')
-    compile_opt_api = '-R2017b';
+    compile_opt_api = '';
+    % compile_opt_api = '-R2017b';
+    compile_opt_api_char = '-R2017b';
 else
     compile_opt_api = '-R2018a';
+    compile_opt_api_char = '-R2018a';
 end
 
 %%
@@ -58,8 +61,8 @@ for i=1:length(source_lib_filenames)
         ... 'GCC=''/software/gcc-6.3.0/bin/gcc''', ...
         ['CFLAGS="$CFLAGS -c -O3 -fPIC -ffast-math ' ...
          '-fno-strict-aliasing -Wno-unused-result -std=c99 -pedantic"'], ...
-        ['-I' envi_mex_include_path], '-outdir', lib_dir, mexCompileOpt{:});
-    out_filename_arch = [basename '-' computer('arch') lower(compile_opt_api) '.o'];
+        ['-I' envi_mex_include_path], '-outdir', lib_dir, mexCompileOpt{:}); % '-D__USE_XOPEN2K8', '-I/software/GNU/gcc-4.9.1_x86_64/include', '-L/software/GNU/gcc-4.9.1_x86_64/lib',
+    out_filename_arch = [basename '-' computer('arch') lower(compile_opt_api_char) '.o'];
     out_filename_list{i} = out_filename_arch;
     movefile(fullfile(lib_dir,out_filename),fullfile(lib_dir,out_filename_arch));
 end
@@ -74,7 +77,7 @@ source_filenames = { ...
     ...'lazyenvireadRect_singleLayerRasterUint8_mex.c'     ...
 };
 
-api_wo_hyphen = lower(strip(compile_opt_api,'left','-'));
+api_wo_hyphen = lower(strip(compile_opt_api_char,'left','-'));
 switch computer
     case 'MACI64'
         out_dir = fullfile(envi_mex_outdir_path,'maci64',api_wo_hyphen);

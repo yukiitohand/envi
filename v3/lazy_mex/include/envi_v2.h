@@ -4,7 +4,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <string.h> 
+// #include <string.h> 
 #include "mex.h"
 #include "matrix.h"
 
