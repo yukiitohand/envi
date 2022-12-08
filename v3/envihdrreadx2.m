@@ -52,18 +52,18 @@ while true
         if ~isempty(regexp(line,cmout))
             line = line(2:end);
         end
-        eqsn = findstr(line,'=');
+        eqsn = strfind(line,'=');
         if ~isempty(eqsn)
             param = strtrim(line(1:eqsn-1));
-            param(findstr(param,':')) = '_';
-            param(findstr(param,' ')) = '_';
-            param(findstr(param,'(')) = '';
-            param(findstr(param,')')) = '';
-            param(findstr(param,'/')) = '';
+            param(strfind(param,':')) = '_';
+            param(strfind(param,' ')) = '_';
+            param(strfind(param,'(')) = '';
+            param(strfind(param,')')) = '';
+            param(strfind(param,'/')) = '';
             value = strtrim(line(eqsn+1:end));
-            if isempty(str2num(value))
-                if ~isempty(findstr(value,'{')) && isempty(findstr(value,'}'))
-                    while isempty(findstr(value,'}'))
+            if isnan(str2double(value))
+                if ~isempty(strfind(value,'{')) && isempty(strfind(value,'}'))
+                    while isempty(strfind(value,'}'))
                         line = fgetl(fid);
                         value = [value,strtrim(line)];
                     end
