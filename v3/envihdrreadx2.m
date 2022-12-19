@@ -61,9 +61,17 @@ while true
             param(strfind(param,')')) = '';
             param(strfind(param,'/')) = '';
             value = strtrim(line(eqsn+1:end));
-            if isnan(str2double(value))
+            if strcmpi(param,'description')
                 if ~isempty(strfind(value,'{')) && isempty(strfind(value,'}'))
-                    while isempty(strfind(value,'}'))
+                    while isempty(strfind(line,'}'))
+                        line = fgetl(fid);
+                        value = [value;{line}];
+                    end
+                end
+                hdr.(param)=value;
+            elseif isnan(str2double(value))
+                if ~isempty(strfind(value,'{')) && isempty(strfind(value,'}'))
+                    while isempty(strfind(line,'}'))
                         line = fgetl(fid);
                         value = [value,strtrim(line)];
                     end

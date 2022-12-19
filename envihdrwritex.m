@@ -62,10 +62,18 @@ activeFieldList = {'description','samples','lines','bands','header offset',...
 
 for idx=1:length(params)
     param = params{idx};
-    value = getfield(hdr_info,param);
-    param(findstr(param,'_')) = ' '; %automatic name
+    value = hdr_info.(param);
+    param(strfind(param,'_')) = ' '; %automatic name
     
-    if strcmp(param,'wavelength') || strcmp(param,'fwhm')
+    if strcmpi(param,'description')
+        if ischar(value)
+            line = [param ' = ' value];
+        elseif iscell(value)
+            value{1} = [param ' = ' value{1}];
+            line = cellfun(@(x) [x '\r\n'],value,'UniformOutput',false);
+        end
+        
+    elseif strcmp(param,'wavelength') || strcmp(param,'fwhm')
         % fwhm is added by Yuki on May 31, 2017
         % output is edited by Yuki on May 31, 2017
         val_str = sprintf('\r\n%13.6f,%13.6f,%13.6f,%13.6f,%13.6f,',value);
@@ -150,7 +158,11 @@ for idx=1:length(params)
     % the cases are created by Yuki Jan. 12, 2015 for customized
     % envihdrread_yuki.m
     if ~isempty(line)
-        fprintf(fid,'%s\r\n',line);
+        if ischar(line)
+            fprintf(fid,'%s\r\n',line);
+        elseif iscell(line)
+            cellfun(@(x) fprintf(fid,x),line,'UniformOutput',false);
+        end
     end
     
 end

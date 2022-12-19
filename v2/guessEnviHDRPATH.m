@@ -8,16 +8,16 @@ function [hdrPath] = guessEnviHDRPATH(basename,dirPath,varargin)
 %   hdrPath: full file path to the header file
 % Optional Parameters
 %   'WARNING': whether or not to shown warning when the file is not exist
-%              (default) false
+%              (default) true
 
-iswarning = false;
+issue_warning = true;
 if (rem(length(varargin),2)==1)
     error('Optional parameters should always go by pairs');
 else
     for i=1:2:(length(varargin)-1)
         switch upper(varargin{i})
             case 'WARNING'
-                iswarning = varargin{i+1};
+                issue_warning = varargin{i+1};
         end
     end
 end
@@ -33,8 +33,8 @@ if isempty(hdrname)
     [hdrname] = findfilei(hdrname,dirPath);
 end
 
-if isempty(hdrname) 
-    if iswarning
+if isempty(hdrname)
+    if issue_warning
         warning('Header file cannot be found');
     end
     hdrPath = '';

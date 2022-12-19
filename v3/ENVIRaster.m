@@ -32,8 +32,23 @@ classdef ENVIRaster < handle
     
     methods
         function obj = ENVIRaster(basename,dirpath,varargin)
-            [obj.hdrpath] = guessEnviHDRPATH(basename,dirpath,varargin{:});
-            [obj.imgpath] = guessEnviIMGPATH(basename,dirpath,varargin{:});
+            
+            if (rem(length(varargin),2)==1)
+                error('Optional parameters should always go by pairs');
+            else
+                for i=1:2:(length(varargin)-1)
+                    switch upper(varargin{i})
+                        case 'WARNING_HDR_NOT_FOUND'
+                            warning_hdr_not_found = varargin{i+1};
+                        case 'WARNING_IMG_NOT_FOUND'
+                            warning_img_not_found = varargin{i+1};
+                        otherwise
+                            error('Unrecognized option: %s',varargin{i});
+                    end
+                end
+            end
+            [obj.hdrpath] = guessEnviHDRPATH(basename,dirpath,'warning',warning_hdr_not_found);
+            [obj.imgpath] = guessEnviIMGPATH(basename,dirpath,'warning',warning_img_not_found);
             
             obj.basename = basename;
             obj.dirpath = dirpath;
