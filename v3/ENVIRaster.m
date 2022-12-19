@@ -32,7 +32,8 @@ classdef ENVIRaster < handle
     
     methods
         function obj = ENVIRaster(basename,dirpath,varargin)
-            
+            warning_hdr_not_found = true;
+            warning_img_not_found = true;
             if (rem(length(varargin),2)==1)
                 error('Optional parameters should always go by pairs');
             else
