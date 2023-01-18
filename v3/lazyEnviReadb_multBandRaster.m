@@ -60,7 +60,7 @@ switch upper(idx_mode)
         error('Undefined INDEX_MODE %s',idx_mode);
 end
          
-imb = squeeze(imb);
+% imb = squeeze(imb);
 
 end
     
