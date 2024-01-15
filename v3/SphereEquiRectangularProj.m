@@ -169,7 +169,14 @@ classdef SphereEquiRectangularProj < handle
                 .* obj.radius .* cosd(obj.standard_parallel);
         end
         
-        
+        % >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+        function set_apparent_standard_parallel(obj,std_parl)
+            obj.standard_parallel = std_parl;
+            cos_std_parl = cosd(std_parl);
+            obj.map_scale_x = obj.map_scale_x * cos_std_parl;
+            obj.easting1 = obj.radius * cos_std_parl * deg2rad(obj.lon1-obj.longitude_of_origin);
+        end
+        % <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
         
     end
 end
