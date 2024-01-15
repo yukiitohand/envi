@@ -200,7 +200,12 @@ end
 if rep_div && isfield(hdr,'data_ignore_value')
     div = cast(hdr.data_ignore_value,class(subimg));
     repval_div = cast(repval_div,class(subimg));
-    subimg(subimg==div) = repval_div;
+    if numel(hdr.data_ignore_value) == 1
+       subimg(subimg==div) = repval_div;
+    elseif numel(hdr.data_ignore_value) == hdr.bands
+        div = reshape(div,1,1,hdr.bands);
+        subimg(subimg==div) = repval_div;
+    end
 end
 
 
