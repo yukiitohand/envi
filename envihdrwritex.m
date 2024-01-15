@@ -134,7 +134,9 @@ for idx=1:length(params)
             value.mapx,value.mapy,value.dx,value.dy,value.datum,value.units);
         line=[param,' = ',val_str];
     elseif strcmp(param,'projection info')
-        line = [param,' = ', value]; 
+        line = [param,' = ', value];
+    elseif strcmp(param,'coordinate system string')
+        line = [param,' = ', value];
     elseif any(strcmpi(param,activeFieldList))
         line=[param,' = ',num2str(value)];
     elseif any(strcmpi(param,{'x','y'}))
