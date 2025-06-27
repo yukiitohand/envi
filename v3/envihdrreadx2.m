@@ -54,13 +54,13 @@ while true
         end
         eqsn = strfind(line,'=');
         if ~isempty(eqsn)
-            param = strtrim(line(1:eqsn-1));
+            param = strtrim(line(1:eqsn(1)-1));
             param(strfind(param,':')) = '_';
             param(strfind(param,' ')) = '_';
             param(strfind(param,'(')) = '';
             param(strfind(param,')')) = '';
             param(strfind(param,'/')) = '';
-            value = strtrim(line(eqsn+1:end));
+            value = strtrim(line(eqsn(1)+1:end));
             if strcmpi(param,'description')
                 if ~isempty(strfind(value,'{')) && isempty(strfind(value,'}'))
                     while isempty(strfind(line,'}'))

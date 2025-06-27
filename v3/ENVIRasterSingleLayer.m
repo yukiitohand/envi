@@ -41,27 +41,54 @@ classdef ENVIRasterSingleLayer < ENVIRaster
         end
         
         function [img] = readimg(obj,varargin)
-            [img] = lazyenvireadRect_singleLayerRaster_mexw(...
-                obj.imgpath,obj.hdr,0,0,obj.hdr.samples,obj.hdr.lines,...
-                varargin{:});
+            if isempty(obj.hdr)
+                error('no img is found');
+            end
+            img = lazyenvireadRectxv2_multBandRaster_mexw(...
+                obj.imgpath,obj.hdr,[1 obj.hdr.samples],[1 obj.hdr.lines], ...
+                [1, 1],varargin{:});
             if nargout<1
                 obj.img = img;
             end
+            % [img] = lazyenvireadRect_singleLayerRaster_mexw(...
+            %     obj.imgpath,obj.hdr,0,0,obj.hdr.samples,obj.hdr.lines,...
+            %     varargin{:});
+            % if nargout<1
+            %     obj.img = img;
+            % end
         end
         
         function [val] = lazyEnviRead(obj,s,l,varargin)
-            val = lazyenvireadRect_singleLayerRaster_mexw(...
-                obj.imgpath,obj.hdr,s-1,l-1,1,1,varargin{:});
+            if isempty(obj.hdr)
+                error('no img is found');
+            end
+            if any(size(s)~=size(l))
+                error('Input s and l has different shape');
+            end
+            val = lazyenvireadRectxv2_multBandRaster_mexw(...
+                obj.imgpath, obj.hdr, [s s], [l l], [1, 1], varargin{:});
+            % val = lazyenvireadRect_singleLayerRaster_mexw(...
+            %     obj.imgpath,obj.hdr,s-1,l-1,1,1,varargin{:});
         end
         
         function [iml] = lazyEnviReadl(obj,l,varargin)
-            iml = lazyenvireadRect_singleLayerRaster_mexw(...
-                obj.imgpath,obj.hdr,0,l-1,obj.hdr.samples,1,varargin{:});
+            if isempty(obj.hdr)
+                error('no img is found');
+            end
+            iml = lazyEnviReadl_multBandRaster(obj.imgpath, obj.hdr, l,...
+                varargin{:});
+            % iml = lazyenvireadRect_singleLayerRaster_mexw(...
+            %     obj.imgpath,obj.hdr,0,l-1,obj.hdr.samples,1,varargin{:});
         end
         
         function [imc] = lazyEnviReadc(obj,c,varargin)
-            imc = lazyenvireadRect_singleLayerRaster_mexw(...
-                obj.imgpath,obj.hdr,c-1,0,1,obj.hdr.lines,varargin{:});
+            if isempty(obj.hdr)
+                error('no img is found');
+            end
+            imc = lazyEnviReadc_multBandRaster(obj.imgpath, obj.hdr, c,...
+                varargin{:});
+            % imc = lazyenvireadRect_singleLayerRaster_mexw(...
+            %     obj.imgpath,obj.hdr,c-1,0,1,obj.hdr.lines,varargin{:});
         end
         
         function [subimg] = get_subimage_wPixelRange(obj,xrange,yrange,...
@@ -101,12 +128,19 @@ classdef ENVIRasterSingleLayer < ENVIRaster
             if xrange(1)>xrange(2) || yrange(1)>yrange(2)
                 error('Either of the range is not in the right order');
             end
+
+            if isempty(obj.hdr)
+                error('no img is found');
+            end
+            zrange = [1,1];
+            [subimg] = lazyenvireadRectxv2_multBandRaster_mexw(...
+                obj.imgpath,obj.hdr,xrange,yrange,zrange,varargin{:});
             
-            sample_offset = xrange(1)-1; line_offset = yrange(1)-1;
-            samplesc = xrange(2)-xrange(1)+1; linesc = yrange(2)-yrange(1)+1;
-            [subimg] = lazyenvireadRect_singleLayerRaster_mexw(...
-                obj.imgpath,obj.hdr,sample_offset,line_offset,...
-                samplesc,linesc,varargin{:});
+            % sample_offset = xrange(1)-1; line_offset = yrange(1)-1;
+            % samplesc = xrange(2)-xrange(1)+1; linesc = yrange(2)-yrange(1)+1;
+            % [subimg] = lazyenvireadRect_singleLayerRaster_mexw(...
+            %     obj.imgpath,obj.hdr,sample_offset,line_offset,...
+            %     samplesc,linesc,varargin{:});
         end
         
     end

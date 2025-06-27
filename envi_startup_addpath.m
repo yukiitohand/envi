@@ -65,6 +65,10 @@ if ~check_path_exist(envi_toolbox_dir, pathCell)
     end
 
     switch cmp_arch
+        case 'maca64'
+            % For Mac computers
+            envi_mex_build_path = fullfile(envi_toolbox_dir,'v3','lazy_mex','build','maca64');
+            envi_mex_build_path2 = fullfile(envi_toolbox_dir,'v3','lazy_mex','build','maca64',api);
         case 'maci64'
             % For Mac computers
             envi_mex_build_path = fullfile(envi_toolbox_dir,'v3','lazy_mex','build','maci64');

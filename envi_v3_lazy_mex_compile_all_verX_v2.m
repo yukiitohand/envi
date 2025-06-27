@@ -81,6 +81,8 @@ api_wo_hyphen = lower(strip(compile_opt_api_char,'left','-'));
 switch computer
     case 'MACI64'
         out_dir = fullfile(envi_mex_outdir_path,'maci64',api_wo_hyphen);
+    case 'MACA64'
+        out_dir = fullfile(envi_mex_outdir_path,'maca64',api_wo_hyphen);
     case 'GLNXA64'
         out_dir = fullfile(envi_mex_outdir_path,'glnxa64',api_wo_hyphen);
     case 'PCWIN64'
